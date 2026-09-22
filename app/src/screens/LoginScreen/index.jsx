@@ -42,7 +42,7 @@ const LoginScreen = () => {
     <AppScreen>
       <div className={cn("login-screen", "mx-auto flex min-h-full w-full max-w-[24rem] flex-col justify-center px-3 py-4")}>
         <h1 className={cn("login-title", titleClass, "mb-1 text-xl")}>
-          {t("estate")}
+          {t("rent_manager")}
         </h1>
         <p className={cn("login-copy", "mb-4 text-[0.875rem] text-cs-body")}>{subtitle}</p>
         <form className={cn("login-form")} onSubmit={(event) => submitLogin(event, email, password, isSignIn)}>

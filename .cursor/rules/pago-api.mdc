@@ -1,5 +1,5 @@
 ---
-description: Pago consumer API used by Estate
+description: Pago consumer API used by Rent Manager
 globs: src/pago.js,server/services/pago_sync.js,server/services/pago_match.js,server/services/create_tenant.js,server/services/create_tenants.js,server/services/match_tenant.js,app/src/core/pago/index.js,app/src/core/bills/index.js,app/src/core/utilities/index.js,server/lib/utilities/index.js
 alwaysApply: false
 ---

@@ -47,7 +47,7 @@ const AppHeader = () => {
         )}
         onClick={goHome}
       >
-        {t("estate")}
+        {t("rent_manager")}
       </UnstyledButton>
       {uid &&
         <nav className={cn("app-header-nav", "flex min-w-0 flex-1 items-center gap-4")}>

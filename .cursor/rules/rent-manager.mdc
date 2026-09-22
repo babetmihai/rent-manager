@@ -1,9 +1,9 @@
 ---
-description: Estate app conventions (from Autobom / casino-syndicate)
+description: Rent Manager app conventions (from Autobom / casino-syndicate)
 alwaysApply: true
 ---
 
-# Estate
+# Rent Manager
 
 Vite/React/Redux UI in `app/` (`app/` alias of `app/src/`). Express ticker in `server/`. Pago SDK in `src/`. Env files stay at the repo root. Redux via `app/core/store`.
 

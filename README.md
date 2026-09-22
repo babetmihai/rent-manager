@@ -1,6 +1,6 @@
-# Estate
+# Rent Manager
 
-Property app for apartments. Connect one Pago account and assign invoices to apartments. Dark editorial chrome (mihaibabet.ro). Stack: Vite, React, Redux, Mantine, Tailwind, Firebase Auth/Firestore/Storage, Express ticker.
+Property app for apartments. It uses the Pago API to connect one account and assign invoices to apartments. Dark editorial chrome (mihaibabet.ro). Stack: Vite, React, Redux, Mantine, Tailwind, Firebase Auth/Firestore/Storage, Express ticker.
 
 Each signed-in user only sees their own documents (`createdBy`).
 

@@ -38,13 +38,13 @@ Related profile calls (absolute on the host):
 
 - A path that **starts with `/`** replaces the URL path and stays on `https://pago.cloud`.
 - A path **without a leading slash** is appended to that Retrofit client's `baseUrl`.
-- Bills interfaces use relative `bills/…`. Combined with the absolute `GET /sdk/bills/accounts/summary` and the Estate client, those resolve as `/sdk/bills/…`.
+- Bills interfaces use relative `bills/…`. Combined with the absolute `GET /sdk/bills/accounts/summary` and the Rent Manager client, those resolve as `/sdk/bills/…`.
 - Auth uses relative `uaa/oauth/token` on `https://pago.cloud/authentication/`.
 - Short names such as `extrainfo`, `active`, `subscribe`, `cards` keep a per-module `baseUrl` that is **not** a string constant in the APK (built at runtime). A leading `/` in **Resolved** for those is a guess.
 
 The **Resolved** column prefixes `/sdk/` for `bills/…` and `/authentication/` for `uaa/…`. Host-rooted prefixes (`/payment/`, `/pago-…`, `/pos_v1_1/`, `/rca/`, …) get a leading `/`. `—` means the client `baseUrl` was not in the binary.
 
-## Estate overlap
+## Rent Manager overlap
 
 Paths already used by `src/pago.js`:
 

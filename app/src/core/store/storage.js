@@ -10,7 +10,7 @@ const PERSISTENT_PATHS = [
 
 localforage.config({
   driver: localforage.INDEXEDDB,
-  name: "estate",
+  name: "rent-manager",
   storeName: "persistent_state",
   version: STORE_VERSION
 })
