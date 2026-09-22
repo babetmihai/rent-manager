@@ -1,12 +1,12 @@
 ---
 description: Pago consumer API used by Rent Manager
-globs: src/pago.js,server/services/pago_sync.js,server/services/pago_match.js,server/services/create_tenant.js,server/services/create_tenants.js,server/services/match_tenant.js,app/src/core/pago/index.js,app/src/core/bills/index.js,app/src/core/utilities/index.js,server/lib/utilities/index.js
+globs: server/lib/pago.js,server/services/pago_sync.js,server/services/pago_match.js,server/services/create_tenant.js,server/services/create_tenants.js,server/services/match_tenant.js,app/src/core/pago/index.js,app/src/core/bills/index.js,app/src/core/utilities/index.js,server/lib/utilities/index.js
 alwaysApply: false
 ---
 
 # Pago
 
-Consumer client (`src/pago.js`) against `https://pago.cloud`, OAuth `grant_type=pago`. Login writes the token payload (`access_token`, `refresh_token` if present) onto the pago doc and deletes `password`. Sync uses those tokens; password is only for the one-time login job.
+Consumer client (`server/lib/pago.js`) against `https://pago.cloud`, OAuth `grant_type=pago`. Login writes the token payload (`access_token`, `refresh_token` if present) onto the pago doc and deletes `password`. Sync uses those tokens; password is only for the one-time login job.
 
 Sync reads `GET /pos_v1_1/provider/fetch/{accountUuid}` (`accountUuid` from `GET /authentication/uaa/v1.00/user_profile`). Each nested location becomes a utility (`pagoId` = location `id`, hash `{ pagoId }`, `name` from `locationLabel` or `service`, `address` from `service` or `locationLabel`, `vendor` from `lightProviderDTO.name`). Each nested location invoice becomes a `TBill`: `ref` = Pago invoice `id` (hash `{ pagoId: ref }`), `utilityId` of that location, `dueAmount`/`dueDate` from the nested invoice, `status` paid/pending/overdue from `amountDue` + due date. A bill does not store vendor/address or tenantId. Sync also `GET /pos_v1_1/provider/pdfbytes/{invoiceId}` and attaches the PDF (hash `{ pagoId: "pdf:{ref}" }`, skip if already stored or the invoice has no PDF). Sync (`pago_sync`) writes only Pago data and queues `matchStatus: PENDING`. Four ticker jobs: `create_tenant` (utility `createStatus: PENDING`) creates one tenant from that utility (short name + full address as description) and assigns it. `create_tenants` (pago `tenantStatus: PENDING`) onboards from every open utility, grouping the same street or building into one tenant. `match_tenant` (tenant `assignStatus: PENDING`) assigns leftover utilities that match that tenant via Ollama (tenant name plus an address extracted from the description). `pago_match` (pago `matchStatus: PENDING`) does the same against all existing tenants. Manual utility assign stays `assignedBy: "user"`. A tenant stores utilities as `{ [utilityId]: TRUE }`. A utility has a single `tenantId`. Bills belong to tenants only through `utilityId`.
 

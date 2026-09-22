@@ -26,7 +26,7 @@ UI at `http://localhost:5173`. Ticker health at `http://localhost:3002/health`.
 Thin ESM client for Pago. Node 18+.
 
 ```js
-import { createPago } from "./src/index.js"
+import { createPago } from "./server/lib/pago.js"
 
 const client = createPago({
   email: process.env.PAGO_EMAIL,

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createPago } from "../src/index.js"
+import { createPago } from "../server/lib/pago.js"
 import { mockHttp } from "./mock.js"
 
 

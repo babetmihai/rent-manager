@@ -46,7 +46,7 @@ The **Resolved** column prefixes `/sdk/` for `bills/…` and `/authentication/` 
 
 ## Rent Manager overlap
 
-Paths already used by `src/pago.js`:
+Paths already used by `server/lib/pago.js`:
 
 | Method | Path |
 | --- | --- |

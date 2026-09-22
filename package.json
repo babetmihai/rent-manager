@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./server/lib/pago.js",
   "exports": {
-    ".": "./src/index.js",
-    "./pago": "./src/pago.js"
+    ".": "./server/lib/pago.js",
+    "./pago": "./server/lib/pago.js"
   },
   "engines": {
     "node": ">=18"

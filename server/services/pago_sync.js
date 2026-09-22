@@ -5,7 +5,7 @@ import { FieldValue } from "firebase-admin/firestore"
 import { createServices } from "../lib/services.js"
 import { STEP_STATUS } from "../lib/index.js"
 import { bucket } from "../lib/firebase.js"
-import { createPago } from "../../src/pago.js"
+import { createPago } from "../lib/pago.js"
 import { TBillSync } from "../lib/bills/index.js"
 import { TUtilitySync } from "../lib/utilities/index.js"
 
