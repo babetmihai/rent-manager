@@ -1,0 +1,22 @@
+---
+description: UI talks only to Firestore; the server only runs jobs
+alwaysApply: true
+---
+
+# Jobs
+
+The UI never calls the ticker over HTTP. It writes Firestore and listens. The server never exposes domain REST (`/pago/login`, `/tenants/propose`, …). It only runs ticker jobs on `STEP_STATUS` (`PENDING` → `COMPLETED` / `FAILED`). `/health` is the only HTTP route.
+
+- Client mutator: set `*Status: PENDING`, `*Error: null`, `wakeTicker()`, listen until not pending
+- Ticker: `list` / filter pending, do the work, write the result onto the same doc
+- Wait for a result with `onSnapshot` on that doc, not `fetch` / `axios`
+
+```js
+// no
+await axios.post("/ticker/pago/login", values)
+await axios.post("/ticker/create_tenants", { createdBy })
+
+// yes
+await service.update(id, { loginStatus: STEP_STATUS.PENDING, loginError: null })
+void wakeTicker()
+```

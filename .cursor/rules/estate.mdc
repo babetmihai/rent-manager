@@ -1,0 +1,37 @@
+---
+description: Estate app conventions (from Autobom / casino-syndicate)
+alwaysApply: true
+---
+
+# Estate
+
+Vite/React/Redux UI in `app/` (`app/` alias of `app/src/`). Express ticker in `server/`. Pago SDK in `src/`. Env files stay at the repo root. Redux via `app/core/store`.
+
+## Style
+
+- No semicolons, no trailing commas, double quotes, 2-space indent, max 160 cols
+- Prefer lodash (`import _ from "lodash"`) at call site over one-off helpers or native equivalents
+- No one-off named helpers/wrappers — extract only when reused 2+ times
+- Destructure with `|| {}` / `|| []`; avoid `?.` for field reads (optional calls OK)
+- No nested ternaries; name booleans. JSX: `&&` not ternary. Imperative: `if`, not `&&`
+- No defensive code: no try/catch unless recovering; no fallbacks for required data/env
+- Little noise: persist actual payloads; no remaps; `cleanDeep` means no null guards
+- Rem for custom sizes (often `0.75rem`). Minimal diffs
+- Store collections: `{ [id]: { id, ... } }`. Constants stay arrays. Iterate with `Object.values` / `Object.keys` / lodash
+- React UI state via `actions` so handlers live in `actions.js`
+- Scope store paths with `actions.create(path | () => path)`
+
+## UI (`app/`)
+
+- Imports from `app/` (alias of `src/`): `core/`, `screens/`, `components/`
+- `actions`/`store` from `app/core/store`
+- `React.useState` etc. — never destructure built-ins from `"react"` (third-party hooks unprefixed)
+- Redux only: `actions.get/set/update/unset`; `useSelector(() => selectX())`; fetch then select
+- Selectors return the store slice (`EMPTY_OBJECT` / `EMPTY_ARRAY`) or find by id. No `Object.values` / filter / map in selectors — iterate in the component
+- Domain modules: selectors → fetchers → mutators. Fetchers write store only
+- Loaders: `setLoader`/`clearLoader`. No nested components
+- Mantine + Tailwind + `cn()` from `app/core`. Persist via `PERSISTENT_PATHS`
+- Every UI element has a stable kebab-case class as the first `cn()` argument
+- Plain dark chrome: `#111`, system UI, no display type or brand accent
+- Quiet section labels, bordered cards, in-page / header actions
+- Mantine components over custom chrome. `NumberInput` for numeric values

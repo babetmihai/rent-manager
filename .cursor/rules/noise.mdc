@@ -1,0 +1,37 @@
+---
+description: Write with as little noise as possible. Persist actual payloads; no remaps or defensive guards.
+alwaysApply: true
+---
+
+# Little noise
+
+Smallest code that does the job. Persist and show the payload as it is. `cleanDeep` already drops null/empty, so do not re-guard those fields.
+
+- No remapping: do not rename, format, title-case, invent `status`/`name`, or collapse rows. Spread the source object. Extra keys only when storage requires them (`createdBy`; `pagoId` because Firestore overwrites `id`)
+- No defensive code: no try/catch unless recovering (401 re-login, mark a job failed); no `== null` continues; no fallbacks for required fields
+- `|| {}` / `|| []` only at a destructure. `billsList || []` is the one restore `cleanDeep` needs when it strips an empty array off an object
+- Trust the payload. If the field is there, use it. If it was empty, it is already gone
+
+```js
+// noisy
+for (const bill of bills || []) {
+  const { id: pagoId } = bill || {}
+  if (pagoId == null) continue
+  await invoiceService.update(hash, {
+    name: formatDate(bill.dueDate),
+    status: "due",
+    dueDate: dayjs(bill.dueDate).format("YYYY-MM-DD"),
+    createdBy
+  })
+}
+
+// quiet
+for (const bill of bills) {
+  const { id: pagoId } = bill
+  await invoiceService.update(objectHash({ pagoId: String(pagoId) }), {
+    ...bill,
+    pagoId,
+    createdBy
+  })
+}
+```

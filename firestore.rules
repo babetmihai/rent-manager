@@ -1,0 +1,72 @@
+rules_version = '2'
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null
+    }
+
+    function isOwner() {
+      return isSignedIn() && resource.data.createdBy == request.auth.uid
+    }
+
+    function isCreatingAsOwner() {
+      return isSignedIn() && request.resource.data.createdBy == request.auth.uid
+    }
+
+    function isKeepingOwner() {
+      return isOwner() && request.resource.data.createdBy == resource.data.createdBy
+    }
+
+    function canGetOwnedOrMissing(version, col, docId) {
+      return isSignedIn() && (
+        !exists(/databases/$(database)/documents/versions/$(version)/$(col)/$(docId))
+        || resource.data.createdBy == request.auth.uid
+      )
+    }
+
+    match /versions/{version}/tenants/{docId} {
+      allow get: if canGetOwnedOrMissing(version, "tenants", docId)
+      allow list: if isOwner()
+      allow create: if isCreatingAsOwner()
+      allow update: if isKeepingOwner()
+      allow delete: if isOwner()
+    }
+
+    match /versions/{version}/documents/{docId} {
+      allow get: if canGetOwnedOrMissing(version, "documents", docId)
+      allow list: if isOwner()
+      allow create: if isCreatingAsOwner()
+      allow update: if isKeepingOwner()
+      allow delete: if isOwner()
+    }
+
+    match /versions/{version}/pago/{docId} {
+      allow get: if canGetOwnedOrMissing(version, "pago", docId)
+      allow list: if isOwner()
+      allow create: if isCreatingAsOwner()
+      allow update: if isKeepingOwner()
+      allow delete: if isOwner()
+    }
+
+    match /versions/{version}/bills/{docId} {
+      allow get: if canGetOwnedOrMissing(version, "bills", docId)
+      allow list: if isOwner()
+      allow create: if isCreatingAsOwner()
+      allow update: if isKeepingOwner()
+      allow delete: if isOwner()
+    }
+
+    match /versions/{version}/utilities/{docId} {
+      allow get: if canGetOwnedOrMissing(version, "utilities", docId)
+      allow list: if isOwner()
+      allow create: if isCreatingAsOwner()
+      allow update: if isKeepingOwner()
+      allow delete: if isOwner()
+    }
+
+    match /versions/{version}/meta/{docId} {
+      allow read, write: if isSignedIn()
+    }
+  }
+}

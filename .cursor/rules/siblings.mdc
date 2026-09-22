@@ -1,0 +1,14 @@
+---
+description: For complex issues, copy patterns from Autobom, blackrhino, and gc-ui-tools first
+alwaysApply: true
+---
+
+# Sibling patterns
+
+For anything beyond a local rename, copy tweak, or one-line fix, look up the existing pattern in these repos **before** inventing one:
+
+- `/Users/mihaibabet/Autobom/autobom` — store, loaders, fetch/select, Vite/React/Redux UI
+- `/Users/mihaibabet/Webtron/blackrhino` — i18n, `useLoader` + empty gates, lists
+- `/Users/mihaibabet/Metro/gc-ui-tools` — Mantine pages, loaders, selectors, data lists
+
+Search those codebases first (loaders, selectors, empty/loading UI, i18n, jobs, mail, store). Reuse the same shape here. Do not add new abstractions those projects do not use.

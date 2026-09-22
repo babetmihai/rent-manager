@@ -1,0 +1,62 @@
+{
+  "name": "estate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./pago": "./src/pago.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "concurrently --kill-others-on-fail false \"npm run app\" \"npm run server\"",
+    "app": "vite --config app/vite.config.mjs --mode development",
+    "build": "vite build --config app/vite.config.mjs --mode hosting",
+    "server": "node server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@mantine/core": "^9.5.1",
+    "@mantine/dropzone": "^9.6.1",
+    "@mantine/hooks": "^9.5.1",
+    "@mantine/notifications": "^9.5.1",
+    "axios": "^1.12.2",
+    "clean-deep": "^3.4.0",
+    "clsx": "^2.1.1",
+    "concurrently": "^9.1.2",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "firebase": "^12.13.0",
+    "firebase-admin": "^13.10.0",
+    "history": "^4.10.1",
+    "i18next": "^26.4.2",
+    "localforage": "^1.10.0",
+    "lodash": "^4.17.21",
+    "nodemailer": "^10.0.10",
+    "object-hash": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.14",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^5.3.4",
+    "redux": "^5.0.1",
+    "tailwind-merge": "^3.6.0",
+    "uuid": "^11.0.5",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "postcss": "^8.5.26",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "tailwind-preset-mantine": "^4.1.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^6.2.0"
+  }
+}

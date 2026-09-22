@@ -1,0 +1,23 @@
+---
+description: Autobom-inspired SDK conventions
+alwaysApply: true
+---
+
+# SDK
+
+ESM Node client for Pago. No Home Assistant license layer. Dates via dayjs (`YYYY-MM-DD`).
+
+## Style
+
+- No semicolons, no trailing commas, double quotes, 2-space indent, max 160 cols
+- Domain types: prefix `T` (`TLocation`); native types for primitives
+- Prefer lodash (`import _ from "lodash"`) at call site over one-off helpers
+- No one-off named helpers/wrappers/path-builders — extract only when reused 2+ times
+- Destructure with `|| {}` / `|| []`; avoid `?.` for field reads (optional calls OK)
+- No nested ternaries; name booleans. Imperative: `if`, not `&&`
+- No defensive code: no try/catch unless recovering (401 re-login); no fallbacks for required data
+- Little noise: persist actual payloads; no remaps; `cleanDeep` means no null guards
+- HTTP: axios.create per client; inject `http` in tests
+- Dates: dayjs at the call site (`format("YYYY-MM-DD")`)
+- Arrow `const` factories (`createPago`); nest single-use inside parent
+- Return unwrapped API payloads; do not remap to Romanian display strings
