@@ -11,11 +11,28 @@ import { sendMail } from "../lib/mail.js"
 const pagoService = createServices("pago")
 const tenantService = createServices("tenants")
 
-const formatAmount = (value) => {
-  return Number(value).toLocaleString("ro-RO", {
-    style: "currency",
-    currency: "RON"
-  })
+const formatAmount = (value) => Number(value).toLocaleString("ro-RO", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})
+
+const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => {
+  if (char === "&") return "&amp;"
+  if (char === "<") return "&lt;"
+  if (char === ">") return "&gt;"
+  return "&quot;"
+})
+
+const formatDue = (dueDate) => {
+  if (!dueDate) return ""
+  return dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$1.$2.$3")
+}
+
+const money = (value, color) => {
+  const amount = escapeHtml(formatAmount(value))
+  const serif = "font-family:Georgia,'Iowan Old Style',Palatino,serif;font-size:17px;"
+  const unit = "font-size:10px;letter-spacing:0.08em;color:#8a8175;"
+  return `<span style="${serif}color:${color};">${amount}</span> <span style="${unit}">RON</span>`
 }
 
 const sendInvoices = async ({ client, to, invoices, overdue }) => {
@@ -26,23 +43,45 @@ const sendInvoices = async ({ client, to, invoices, overdue }) => {
     const content = await client.getInvoicePdf(ref)
     if (content) attachments.push({ filename: `${ref}.pdf`, content })
   }
-  const sections = _.map(_.groupBy(invoices, "tenantId"), (group) => {
+  const groups = _.groupBy(invoices, "tenantId")
+  const textSections = []
+  const cards = _.map(groups, (group) => {
     const { name } = group[0]
     const lines = _.map(group, (invoice) => {
-      const { id, dueDate, amountDue, vendor, pointName } = invoice
-      let due = dueDate
-      if (dueDate) due = dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$3-$2-$1")
-      return _.join(_.compact([vendor, pointName, String(id), due, formatAmount(amountDue)]), " · ")
+      const { dueDate, amountDue, vendor } = invoice
+      const due = formatDue(dueDate)
+      return _.join(_.compact([vendor, due, `${formatAmount(amountDue)} RON`]), "\n")
     })
-    return _.join([name, "", ...lines], "\n")
+    const sectionTotal = _.sumBy(group, (invoice) => Number(invoice.amountDue))
+    textSections.push(_.join([name, "", ...lines, "", `${formatAmount(sectionTotal)} RON`], "\n\n"))
+    const rows = _.map(group, (invoice) => {
+      const { dueDate, amountDue, vendor } = invoice
+      const due = formatDue(dueDate)
+      return `<tr>
+        <td style="padding:11px 12px 11px 0;border-top:1px solid rgba(28,25,21,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1c1915;">${escapeHtml(vendor || "")}</td>
+        <td style="padding:11px 12px;border-top:1px solid rgba(28,25,21,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#8a8175;white-space:nowrap;">${escapeHtml(due)}</td>
+        <td align="right" style="padding:11px 0;border-top:1px solid rgba(28,25,21,0.08);white-space:nowrap;">${money(amountDue, "#8c3a2f")}</td>
+      </tr>`
+    })
+    const rowBreak = `<tr><td colspan="3" style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>`
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fffcf8;border-radius:16px;">
+      <tr><td style="padding:24px 24px 8px;font-family:Georgia,'Iowan Old Style',Palatino,serif;font-size:28px;line-height:1.05;letter-spacing:-0.03em;color:#1c1915;">${escapeHtml(name)}</td></tr>
+      <tr><td style="padding:4px 24px 8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows.join(rowBreak)}</table></td></tr>
+      <tr><td align="right" style="padding:14px 24px 22px;border-top:1px solid rgba(28,25,21,0.08);">${money(sectionTotal, "#1c1915")}</td></tr>
+    </table>`
   })
-  const total = _.sumBy(invoices, (invoice) => Number(invoice.amountDue))
   let subject = "Invoices"
   if (overdue) subject = "Overdue invoices"
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#efece6;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#efece6;">
+      <tr><td align="center" style="padding:32px 16px;">${cards.join(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;"><tr><td style="height:24px;line-height:24px;font-size:0;">&nbsp;</td></tr></table>`)}</td></tr>
+    </table>
+  </body></html>`
   await sendMail({
     to,
     subject,
-    text: _.join([...sections, "", formatAmount(total)], "\n"),
+    text: textSections.join("\n\n\n"),
+    html,
     attachments
   })
 }
