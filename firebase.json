@@ -29,7 +29,7 @@
       {
         "source": "/ticker/**",
         "function": {
-          "functionId": "api",
+          "functionId": "login",
           "region": "europe-west1"
         }
       },

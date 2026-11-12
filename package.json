@@ -12,11 +12,10 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "concurrently --kill-others-on-fail false \"npm run app\" \"npm run server\" \"npm run sync\"",
+    "start": "concurrently --kill-others-on-fail false \"npm run app\" \"npm run server\"",
     "app": "vite --config app/vite.config.mjs --mode development",
     "build": "vite build --config app/vite.config.mjs --mode hosting",
     "server": "node server/index.js",
-    "sync": "node server/sync.js",
     "test": "node --test test/*.test.js"
   },
   "license": "MIT",

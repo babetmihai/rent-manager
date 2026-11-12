@@ -1,5 +1,4 @@
 import _ from "lodash"
-import { FieldValue } from "firebase-admin/firestore"
 import { createServices } from "../lib/services.js"
 import { versionRef } from "../lib/firebase.js"
 import { claimLock, releaseLock } from "../lib/lock.js"
@@ -99,32 +98,6 @@ const hold = async (id, step, work) => {
   }
 }
 
-const runPendingLogin = async () => {
-  const accounts = await pagoService.list()
-  const pending = _.filter(accounts, { loginStatus: STEP_STATUS.PENDING })
-  for (const account of pending) {
-    const { id } = account
-    try {
-      await hold(id, "login", async (fresh) => {
-        const { email, password } = fresh
-        const client = createPago({ email, password })
-        const auth = await client.login()
-        await pagoService.update(id, {
-          ...auth,
-          loginStatus: STEP_STATUS.COMPLETED,
-          loginError: null,
-          password: FieldValue.delete()
-        })
-      })
-    } catch (error) {
-      await pagoService.update(id, {
-        loginStatus: STEP_STATUS.FAILED,
-        loginError: error.message
-      })
-    }
-  }
-}
-
 const sendSelected = async (account) => {
   const { email, password, access_token, refresh_token, createdBy, sendKeys = [] } = account
   const client = createPago({ email, password, access_token, refresh_token })
@@ -187,7 +160,6 @@ const runPendingSend = async () => {
 }
 
 const run = async () => {
-  await runPendingLogin()
   await runPendingSend()
 }
 

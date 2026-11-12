@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Jobs
 
-The UI never calls the ticker over HTTP. It writes Firestore and listens. The server never exposes domain REST (`/pago/login`, `/tenants/propose`, …). It only runs ticker jobs on `STEP_STATUS` (`PENDING` → `COMPLETED` / `FAILED`). `/health` is the only HTTP route.
+Login is the HTTP service (`POST /auth/pago`). It checks the Pago password and returns a Firebase custom token. Purge, email, and sync are ticker services on `STEP_STATUS` (`PENDING` → `COMPLETED` / `FAILED`). The UI writes Firestore and listens for those. `/health` is the other HTTP route.
 
 - Client mutator: set `*Status: PENDING`, `*Error: null`, `wakeTicker()`, listen until not pending
 - Ticker: `list` / filter pending, do the work, write the result onto the same doc

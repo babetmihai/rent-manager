@@ -14,5 +14,3 @@ const listenDoc = (id, onWake) => {
 }
 
 export const listenWake = (onWake) => listenDoc("wake", onWake)
-
-export const listenSync = (onWake) => listenDoc("sync", onWake)

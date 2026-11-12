@@ -3,13 +3,12 @@ import { onDocumentWritten } from "firebase-functions/v2/firestore"
 import { onSchedule } from "firebase-functions/v2/scheduler"
 import { defineSecret } from "firebase-functions/params"
 import { app, runServices } from "./server/index.js"
-import syncService from "./server/services/sync.js"
 
 
 const brevoKey = defineSecret("BREVO_API_KEY")
 const region = "europe-west1"
 
-export const api = onRequest({
+export const login = onRequest({
   region,
   secrets: [brevoKey],
   invoker: "public",
@@ -35,11 +34,11 @@ export const sync = onDocumentWritten({
   region,
   timeoutSeconds: 540,
   memory: "1GiB"
-}, () => syncService.run())
+}, () => runServices(["sync"]))
 
 export const syncDaily = onSchedule({
   schedule: "every 24 hours",
   region,
   timeoutSeconds: 540,
   memory: "1GiB"
-}, () => syncService.run())
+}, () => runServices(["sync"]))
