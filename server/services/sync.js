@@ -17,6 +17,7 @@ const syncAccount = async (account) => {
   const tenants = await tenantService.list({ createdBy })
   const byName = _.groupBy(tenants, (tenant) => _.toLower(_.trim(tenant.name)))
   const invoicesByTenant = {}
+  const onPago = {}
   for (const provider of providers) {
     const { locations = [], lightProviderDTO = {} } = provider
     const { name: vendor } = lightProviderDTO
@@ -37,6 +38,7 @@ const syncAccount = async (account) => {
       }
       for (const tenant of matched) {
         const { id: tenantId } = tenant
+        onPago[tenantId] = true
         if (!invoicesByTenant[tenantId]) invoicesByTenant[tenantId] = []
         for (const invoice of invoices) {
           invoicesByTenant[tenantId].push({ ...invoice, vendor, pointName })
@@ -46,6 +48,10 @@ const syncAccount = async (account) => {
   }
   for (const tenant of tenants) {
     const { id: tenantId, invoices: current = [] } = tenant
+    if (!onPago[tenantId]) {
+      await tenantService.remove(tenantId)
+      continue
+    }
     let invoices = invoicesByTenant[tenantId]
     if (!invoices) invoices = []
     const previous = _.keyBy(current, (invoice) => String(invoice.id))

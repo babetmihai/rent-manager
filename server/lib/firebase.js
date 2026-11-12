@@ -17,12 +17,15 @@ if (FIREBASE_SERVICE_ACCOUNT) {
   options.credential = cert(serviceAccount)
 }
 
+const inlineConfig = Boolean(FIREBASE_CONFIG && FIREBASE_CONFIG.trim().startsWith("{"))
 if (FIREBASE_CONFIG) {
-  const { storageBucket } = JSON.parse(fs.readFileSync(path.join(repoRoot, FIREBASE_CONFIG), "utf8")) || {}
+  let raw = FIREBASE_CONFIG
+  if (!inlineConfig) raw = fs.readFileSync(path.join(repoRoot, FIREBASE_CONFIG), "utf8")
+  const { storageBucket } = JSON.parse(raw) || {}
   options.storageBucket = storageBucket
 }
 
-if (!options.credential && !process.env.K_SERVICE) {
+if (!options.credential && !process.env.K_SERVICE && !inlineConfig) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT is required")
 }
 

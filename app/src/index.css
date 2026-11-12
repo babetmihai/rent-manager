@@ -374,7 +374,7 @@
 .tenant-row-main {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   min-width: 0;
 }
 
@@ -402,11 +402,51 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
   min-width: 0;
-  min-height: 2.75rem;
   padding: 0;
   text-align: left;
+}
+
+.tenant-row-save {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.05rem;
+  color: var(--color-cs-muted);
+}
+
+.tenant-row-save.is-saved {
+  color: #2f6b4f;
+}
+
+.tenant-row-save-spin {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1.5px solid rgb(28 25 21 / 14%);
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation: tenant-save-spin 0.7s linear infinite;
+}
+
+.tenant-row-save-check {
+  display: block;
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes tenant-save-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .tenant-row-name-hit {
@@ -434,20 +474,42 @@
   white-space: nowrap;
 }
 
-.tenant-row-email {
-  overflow: hidden;
-  color: var(--color-cs-muted);
+.tenant-email-form,
+.tenant-description-form {
+  margin: 0;
+}
+
+.tenant-row-email,
+.tenant-row-description {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.05rem 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
   font-size: 0.8125rem;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
+  outline: none;
+}
+
+.tenant-row-email {
+  color: var(--color-cs-muted);
+}
+
+.tenant-row-email::placeholder {
+  color: #8c3a2f;
 }
 
 .tenant-row-description {
+  min-height: 0;
   color: var(--color-cs-body);
-  font-size: 0.8125rem;
-  line-height: 1.3;
-  white-space: pre-wrap;
+  resize: none;
+  field-sizing: content;
+}
+
+.tenant-row-description::placeholder {
+  color: var(--color-cs-muted);
 }
 
 .tenant-row-sent {
@@ -618,28 +680,6 @@
   flex-shrink: 0;
 }
 
-.tenant-row-edit {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-left: -0.15rem;
-  color: var(--color-cs-muted);
-}
-
-.tenant-row-edit-icon {
-  display: block;
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .money {
   display: flex;
   align-items: baseline;
@@ -782,8 +822,7 @@
   stroke-linecap: round;
 }
 
-.tenants-refresh,
-.tenants-create {
+.tenants-refresh {
   flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
@@ -815,36 +854,6 @@
   border-left: 0.22rem solid transparent;
   border-right: 0.22rem solid transparent;
   transform: rotate(40deg);
-}
-
-.tenants-create-mark {
-  position: relative;
-  width: 1.125rem;
-  height: 1.125rem;
-}
-
-.tenants-create-mark::before,
-.tenants-create-mark::after {
-  content: "";
-  position: absolute;
-  background: currentColor;
-  border-radius: 1px;
-}
-
-.tenants-create-mark::before {
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  transform: translateY(-50%);
-}
-
-.tenants-create-mark::after {
-  top: 0;
-  left: 50%;
-  width: 2px;
-  height: 100%;
-  transform: translateX(-50%);
 }
 
 .tenants-refresh:disabled,
@@ -883,70 +892,6 @@
   padding: 0.5rem 1rem 1rem;
 }
 
-.tenant-modal-form .text-input-label,
-.tenant-modal-form .mantine-Textarea-label,
-.tenant-modal-form .mantine-TagsInput-label {
-  margin-bottom: 0.25rem;
-}
-
-.tenant-modal-form .text-input-field,
-.tenant-modal-form .mantine-Textarea-input,
-.tenant-modal-form .mantine-TagsInput-input {
-  height: 2.75rem;
-  padding-inline: 0.875rem;
-  border-radius: 0.75rem;
-  font-size: 0.9375rem;
-}
-
-.tenant-modal-form .text-input-field,
-.tenant-modal-form .mantine-Textarea-input,
-.tenant-modal-form .mantine-TagsInput-input {
-  --input-bg: #efece6;
-  --input-color: #1c1915;
-  --input-bd: rgb(28 25 21 / 12%);
-  background-color: #efece6;
-  color: #1c1915;
-  border-color: rgb(28 25 21 / 12%);
-}
-
-.tenant-modal-form .mantine-Textarea-input {
-  height: auto;
-  min-height: 4.25rem;
-  padding-block: 0.5rem;
-}
-
-.tenant-modal-form .mantine-TagsInput-input {
-  height: auto;
-  min-height: 2.75rem;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-
-.tenant-modal-submit {
-  height: 2.75rem;
-}
-
-.tenant-modal-form .mantine-TagsInput-pill {
-  height: 1.75rem;
-  padding-inline: 0.7rem 0.15rem;
-  border: 1px solid rgb(28 25 21 / 12%);
-  border-radius: 999px;
-  background: #fffcf8;
-  color: #1c1915;
-  font-size: 0.75rem;
-}
-
-.tenant-modal-form .mantine-TagsInput-inputField {
-  color: #1c1915;
-}
-
-.tenant-modal-form .mantine-TagsInput-inputField::placeholder {
-  color: #8a8175;
-}
-
-.tenant-modal-delete {
-  height: 2.75rem;
-}
 
 html,
 body,

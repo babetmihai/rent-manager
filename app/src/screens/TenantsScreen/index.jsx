@@ -8,7 +8,6 @@ import { refreshInvoices, requestInvoiceMail, selectPago } from "app/core/pago"
 import { fetchTenants, listenTenants, selectTenants, updateTenant } from "app/core/tenants"
 import { useLoader } from "app/core/loaders"
 import { showBanner } from "app/core/banner"
-import { openCreate, openEdit } from "./actions"
 import _ from "lodash"
 
 
@@ -34,6 +33,9 @@ const TenantsScreen = () => {
   const [pendingOnly, setPendingOnly] = React.useState(false)
   const [selected, setSelected] = React.useState({})
   const [drafts, setDrafts] = React.useState({})
+  const [descriptions, setDescriptions] = React.useState({})
+  const [emails, setEmails] = React.useState({})
+  const [saved, setSaved] = React.useState({})
   const isEmpty = _.isEmpty(tenants)
   const needle = _.toLower(_.trim(search))
   const allTags = _.sortBy(_.uniq(_.flatMap(tenants, (tenant) => {
@@ -140,12 +142,63 @@ const TenantsScreen = () => {
     })
   }
 
+  const saveTenant = async (id, values) => {
+    setSaved((current) => ({ ...current, [id]: "saving" }))
+    try {
+      await updateTenant(id, values)
+    } catch (error) {
+      setSaved((current) => {
+        const next = { ...current }
+        delete next[id]
+        return next
+      })
+      throw error
+    }
+    setSaved((current) => ({ ...current, [id]: "saved" }))
+    window.setTimeout(() => {
+      setSaved((current) => {
+        if (current[id] !== "saved") return current
+        const next = { ...current }
+        delete next[id]
+        return next
+      })
+    }, 1200)
+  }
+
+  const saveTimers = React.useRef({})
+
+  const queueSave = (id, field, raw, stored) => {
+    const key = `${id}:${field}`
+    window.clearTimeout(saveTimers.current[key])
+    const next = _.trim(raw)
+    if (next === stored) return
+    saveTimers.current[key] = window.setTimeout(() => {
+      void saveTenant(id, { [field]: next }).then(() => {
+        let clear = setDescriptions
+        if (field === "email") clear = setEmails
+        clear((current) => {
+          if (current[id] !== raw) return current
+          const copy = { ...current }
+          delete copy[id]
+          return copy
+        })
+      })
+    }, 500)
+  }
+
+  React.useEffect(() => {
+    const timers = saveTimers.current
+    return () => {
+      for (const key of Object.keys(timers)) window.clearTimeout(timers[key])
+    }
+  }, [])
+
   const addTag = async (tenant) => {
     const { id, tags = [] } = tenant
     const raw = _.trim(drafts[id])
     if (!raw) return
     const exists = _.some(tags, (tag) => _.toLower(tag) === _.toLower(raw))
-    if (!exists) await updateTenant(id, { tags: [...tags, raw] })
+    if (!exists) await saveTenant(id, { tags: [...tags, raw] })
     setDrafts((current) => ({ ...current, [id]: "" }))
   }
 
@@ -197,9 +250,6 @@ const TenantsScreen = () => {
                   <span className={cn("tenants-refresh-mark")} />
                 </Button>
               }
-              <Button className={cn("tenants-create")} variant="default" aria-label={t("add_tenant")} onClick={openCreate}>
-                <span className={cn("tenants-create-mark")} />
-              </Button>
             </div>
             {!isEmpty &&
               <div className={cn("tenants-tools-row")}>
@@ -287,31 +337,50 @@ const TenantsScreen = () => {
                         >
                           <div className={cn("tenant-row-name", titleClass)}>{name}</div>
                         </UnstyledButton>
-                        <UnstyledButton className={cn("tenant-row-edit")} aria-label={t("edit")} onClick={() => openEdit(tenant)}>
-                          <svg className={cn("tenant-row-edit-icon")} viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                          </svg>
-                        </UnstyledButton>
-                      </div>
-                      <UnstyledButton
-                        className={cn("tenant-row-open")}
-                        aria-expanded={hasUnpaid ? expanded : undefined}
-                        onClick={() => {
-                          if (!hasUnpaid) return
-                          setOpenIds((current) => ({ ...current, [id]: !current[id] }))
-                        }}
-                      >
-                        <div className={cn("tenant-row-copy")}>
-                          <div className={cn("tenant-row-email")}>{canSend ? email : t("no_email")}</div>
-                          {description &&
-                            <div className={cn("tenant-row-description")}>{description}</div>
-                          }
-                        </div>
-                        {hasUnsent && lastSentAt &&
-                          <div className={cn("tenant-row-sent")}>{t("last_sent")} {formatSent(lastSentAt)}</div>
+                        {saved[id] &&
+                          <span className={cn("tenant-row-save", saved[id] === "saved" && "is-saved")}>
+                            {saved[id] === "saving" &&
+                              <span className={cn("tenant-row-save-spin")} />
+                            }
+                            {saved[id] === "saved" &&
+                              <svg className={cn("tenant-row-save-check")} viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M3.2 8.2 6.4 11.4 12.8 4.6" />
+                              </svg>
+                            }
+                          </span>
                         }
-                      </UnstyledButton>
+                      </div>
+                      <form className={cn("tenant-email-form")} onSubmit={(event) => event.preventDefault()}>
+                        <input
+                          className={cn("tenant-row-email")}
+                          type="email"
+                          value={emails[id] == null ? email || "" : emails[id]}
+                          placeholder={t("no_email")}
+                          aria-label={t("email")}
+                          onChange={(event) => {
+                            const value = event.target.value
+                            setEmails((current) => ({ ...current, [id]: value }))
+                            queueSave(id, "email", value, email || "")
+                          }}
+                        />
+                      </form>
+                      {hasUnsent && lastSentAt &&
+                        <div className={cn("tenant-row-sent")}>{t("last_sent")} {formatSent(lastSentAt)}</div>
+                      }
+                      <form className={cn("tenant-description-form")} onSubmit={(event) => event.preventDefault()}>
+                        <textarea
+                          className={cn("tenant-row-description")}
+                          value={descriptions[id] == null ? description || "" : descriptions[id]}
+                          placeholder={t("description")}
+                          aria-label={t("description")}
+                          rows={1}
+                          onChange={(event) => {
+                            const value = event.target.value
+                            setDescriptions((current) => ({ ...current, [id]: value }))
+                            queueSave(id, "description", value, description || "")
+                          }}
+                        />
+                      </form>
                       <div className={cn("tenant-tags")}>
                         {hasUnpaid &&
                           <span className={cn("tenant-tag is-fixed")}>{t("pending")}</span>
@@ -326,7 +395,7 @@ const TenantsScreen = () => {
                               type="button"
                               className={cn("tenant-tag-remove")}
                               aria-label={t("delete")}
-                              onClick={() => updateTenant(id, { tags: _.without(tags, tag) })}
+                              onClick={() => saveTenant(id, { tags: _.without(tags, tag) })}
                             >
                               ×
                             </button>
