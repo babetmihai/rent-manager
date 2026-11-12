@@ -24,7 +24,7 @@ void loadStorage()
         <Provider store={store}>
           <MantineProvider
             theme={theme}
-            forceColorScheme="dark"
+            forceColorScheme="light"
             withCssVariables
           >
             <Notifications position="bottom-right" zIndex={400} />

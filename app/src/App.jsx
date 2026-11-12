@@ -1,5 +1,4 @@
 import React from "react"
-import { Route, Switch } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { Center, Loader } from "@mantine/core"
 import ModalDispatcher from "./core/modals/ModalDispatcher"
@@ -7,18 +6,35 @@ import { useBanner } from "./core/banner"
 import AppLayout from "./components/AppLayout"
 import LoginScreen from "./screens/LoginScreen"
 import TenantsScreen from "./screens/TenantsScreen"
-import TenantScreen from "./screens/TenantScreen"
-import UtilitiesScreen from "./screens/UtilitiesScreen"
-import UtilityScreen from "./screens/UtilityScreen"
 import { selectAuthReady, selectAuthUid } from "./core/auth"
+import { STEP_STATUS } from "./core"
+import { fetchPago, listenPago, selectPago } from "./core/pago"
 
 
 const App = () => {
   useBanner()
   const ready = useSelector(() => selectAuthReady())
   const uid = useSelector(() => selectAuthUid())
+  const pago = useSelector(() => selectPago())
+  const { loginStatus } = pago
+  const loggedIn = loginStatus === STEP_STATUS.COMPLETED
+  const [loadedUid, setLoadedUid] = React.useState(null)
 
-  if (!ready) {
+  React.useLayoutEffect(() => {
+    if (!uid) return
+    let alive = true
+    fetchPago().finally(() => {
+      if (alive) setLoadedUid(uid)
+    })
+    const unlisten = listenPago()
+    return () => {
+      alive = false
+      unlisten()
+    }
+  }, [uid])
+
+  const waiting = Boolean(uid) && loadedUid !== uid
+  if (!ready || waiting) {
     return (
       <Center h="100vh" className="bg-cs-bg">
         <Loader color="gray" />
@@ -26,7 +42,7 @@ const App = () => {
     )
   }
 
-  if (!uid) {
+  if (!loggedIn) {
     return (
       <AppLayout>
         <LoginScreen />
@@ -37,12 +53,7 @@ const App = () => {
 
   return (
     <AppLayout>
-      <Switch>
-        <Route path="/" exact component={TenantsScreen} />
-        <Route path="/tenants/:tenantId" component={TenantScreen} />
-        <Route path="/utilities" exact component={UtilitiesScreen} />
-        <Route path="/utilities/:utilityId" component={UtilityScreen} />
-      </Switch>
+      <TenantsScreen />
       <ModalDispatcher />
     </AppLayout>
   )

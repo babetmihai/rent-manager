@@ -1,24 +1,19 @@
 import express from "express"
+import { createHash } from "crypto"
 import _ from "lodash"
-import { SERVICES_ENABLED, WAKE_CATCHUP_SECONDS, PORT, MACHINE_ID } from "./lib/index.js"
+import { FieldValue } from "firebase-admin/firestore"
+import { SERVICES_ENABLED, WAKE_CATCHUP_SECONDS, PORT, MACHINE_ID, STEP_STATUS } from "./lib/index.js"
 import { listenWake } from "./lib/wake.js"
-import pagoSyncService from "./services/pago_sync.js"
-import createTenantService from "./services/create_tenant.js"
-import createTenantsService from "./services/create_tenants.js"
-import pagoMatchService from "./services/pago_match.js"
-import matchTenantService from "./services/match_tenant.js"
+import { auth } from "./lib/firebase.js"
+import { createPago } from "./lib/pago.js"
+import { createServices } from "./lib/services.js"
+import pagoService from "./services/pago.js"
 import purgeService from "./services/purge.js"
-import billsMailService from "./services/bills_mail.js"
 
 
 const SERVICE_BY_NAME = {
-  pago_sync: pagoSyncService,
-  create_tenant: createTenantService,
-  create_tenants: createTenantsService,
-  pago_match: pagoMatchService,
-  match_tenant: matchTenantService,
   purge: purgeService,
-  bills_mail: billsMailService
+  pago: pagoService
 }
 
 const wakeCatchupSeconds = Number(WAKE_CATCHUP_SECONDS) || 120
@@ -74,9 +69,49 @@ const runTicker = () => {
   void cycle("startup")
 }
 
+const pagoAccounts = createServices("pago")
+
 const app = express()
+app.use(express.json())
+
 app.get("/health", (req, res) => {
   res.json({ ok: true, services: serviceNames })
+})
+
+app.post("/auth/pago", async (req, res) => {
+  const { email, password } = req.body || {}
+  const trimmed = _.trim(email)
+  try {
+    const client = createPago({ email: trimmed, password })
+    const session = await client.login()
+    const accounts = await pagoAccounts.list()
+    const existing = _.find(accounts, (account) => _.toLower(account.email) === _.toLower(trimmed))
+    let uid = existing && existing.createdBy
+    if (!uid) uid = createHash("sha256").update(_.toLower(trimmed)).digest("hex").slice(0, 28)
+    const token = await auth.createCustomToken(uid)
+    const saved = {
+      ...session,
+      email: trimmed,
+      createdBy: uid,
+      loginStatus: STEP_STATUS.COMPLETED,
+      loginError: null
+    }
+    if (existing) {
+      await pagoAccounts.update(existing.id, {
+        ...saved,
+        password: FieldValue.delete()
+      })
+    } else {
+      await pagoAccounts.create(saved)
+    }
+    res.json({ token })
+  } catch (error) {
+    const { message } = error
+    const rejected = message === "Pago login failed" || message === "login rejected" || message === "unauthorized"
+    let status = 500
+    if (rejected) status = 401
+    res.status(status).json({ error: message })
+  }
 })
 
 const port = Number(PORT) || 3002

@@ -1,13 +1,8 @@
 import { showModal } from "app/core/modals"
-import { createTenant } from "app/core/tenants"
-import { requestPagoTenants } from "app/core/pago"
+import { createTenant, removeTenant, updateTenant } from "app/core/tenants"
 import { showBanner } from "app/core/banner"
 import i18n from "app/core/i18n"
-import history from "app/core/history"
 import TenantModal from "./TenantModal"
-
-
-export const openUtilities = () => history.push("/utilities")
 
 
 export const openCreate = () => showModal(TenantModal, {
@@ -17,9 +12,13 @@ export const openCreate = () => showModal(TenantModal, {
   }
 })
 
-export const openTenant = (id) => history.push(`/tenants/${id}`)
-
-export const createTenants = async () => {
-  await requestPagoTenants()
-  showBanner("info", i18n.t("tenants_queued"))
-}
+export const openEdit = (tenant) => showModal(TenantModal, {
+  tenant,
+  onSubmit: async (values) => {
+    await updateTenant(tenant.id, values)
+  },
+  onDelete: async () => {
+    await removeTenant(tenant.id)
+    showBanner("success", i18n.t("tenant_deleted"))
+  }
+})

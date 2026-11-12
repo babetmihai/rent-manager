@@ -22,8 +22,6 @@ export const {
   SERVICES_ENABLED,
   WAKE_CATCHUP_SECONDS,
   PORT,
-  OLLAMA_URL = "http://localhost:11434",
-  OLLAMA_MODEL = "llama3.2:3b",
   SMTP_URL
 } = process.env
 

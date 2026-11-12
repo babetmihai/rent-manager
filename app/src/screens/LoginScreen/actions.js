@@ -1,15 +1,8 @@
-import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "app/core/auth"
+import { signInWithPago } from "app/core/auth"
+import { fetchPago } from "app/core/pago"
 
 
-export const submitLogin = (event, email, password, isSignIn) => {
-  event.preventDefault()
-  if (isSignIn) {
-    void signInWithEmail(email, password)
-    return
-  }
-  void signUpWithEmail(email, password)
-}
-
-export const submitGoogle = () => {
-  void signInWithGoogle()
+export const submitLogin = async (email, password) => {
+  await signInWithPago(email, password)
+  await fetchPago()
 }

@@ -1,0 +1,23 @@
+---
+description: Keep the app beautiful, consistent, and aligned with UX practice
+alwaysApply: true
+---
+
+# UX
+
+When changing the app, make the screen beautiful, keep it consistent with the screens already here, and follow UX practice. Match the paper and ink chrome: warm `#efece6` ground, `#fffcf8` cards, `#1c1915` type, serif for names and amounts. Mantine, rem, kebab-case first class in `cn()`.
+
+- Mobile first. One primary action. Buttons say what they do. Labels stay visible on fields.
+- A status is supporting text with a mark, never a control. The price is trailing text. A chevron means the row opens. Toggles and edits live on the edit screen.
+- Touch targets at least 2.75rem. Primary action in the thumb zone. Short copy.
+- Padding and layout that must survive Mantine go in unlayered CSS. Do not import unlayered `@mantine/core/styles.css`.
+
+```jsx
+// status treated as a button, price in the middle of the row
+<Switch checked={enabled} onChange={toggle} />
+
+// name, supporting status, trailing price
+<div className={cn("tenant-row-name")}>{name}</div>
+<div className={cn("tenant-row-status", "is-on")}>{t("active")}</div>
+<div className={cn("tenant-row-due")}>{amount}</div>
+```

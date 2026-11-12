@@ -1,9 +1,6 @@
 import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithCustomToken,
   signOut as firebaseSignOut
 } from "firebase/auth"
 import { actions } from "app/core/store"
@@ -30,38 +27,27 @@ export const initAuth = () => {
   })
 }
 
-export const signInWithEmail = async (email, password) => {
+export const signInWithPago = async (email, password) => {
   const auth = getFirebaseAuth()
+  const previous = auth.currentUser && auth.currentUser.uid
   try {
     setLoader("auth.signIn")
-    await signInWithEmailAndPassword(auth, email.trim(), password)
+    const response = await fetch("/ticker/auth/pago", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password })
+    })
+    const body = await response.json()
+    if (!response.ok) throw new Error(body.error)
+    await signInWithCustomToken(auth, body.token)
+    const { uid } = auth.currentUser
+    if (previous && previous !== uid) {
+      actions.unset("pago")
+      actions.unset("tenants")
+    }
+    authActions.set(mapAuth(auth.currentUser))
   } finally {
     clearLoader("auth.signIn")
-  }
-}
-
-export const signUpWithEmail = async (email, password) => {
-  const auth = getFirebaseAuth()
-  try {
-    setLoader("auth.signUp")
-    await createUserWithEmailAndPassword(auth, email.trim(), password)
-  } finally {
-    clearLoader("auth.signUp")
-  }
-}
-
-export const signInWithGoogle = async () => {
-  const auth = getFirebaseAuth()
-  try {
-    setLoader("auth.google")
-    await signInWithPopup(auth, new GoogleAuthProvider())
-  } catch (error) {
-    const { code } = error
-    if (code === "auth/popup-closed-by-user") return
-    if (code === "auth/cancelled-popup-request") return
-    throw error
-  } finally {
-    clearLoader("auth.google")
   }
 }
 
@@ -69,6 +55,8 @@ export const signOut = async () => {
   const auth = getFirebaseAuth()
   try {
     setLoader("auth.signOut")
+    actions.unset("pago")
+    actions.unset("tenants")
     await firebaseSignOut(auth)
   } finally {
     clearLoader("auth.signOut")

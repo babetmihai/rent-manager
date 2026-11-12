@@ -50,7 +50,8 @@ export const theme = createTheme({
     Modal: {
       defaultProps: {
         centered: true,
-        radius: "sm"
+        radius: "sm",
+        transitionProps: { transition: "slide-up", duration: 200 }
       },
       classNames: {
         root: "modal",
@@ -64,11 +65,11 @@ export const theme = createTheme({
       },
       styles: {
         header: {
-          background: "var(--color-cs-elevated)"
+          background: "transparent"
         },
         content: {
           background: "var(--color-cs-elevated)",
-          border: "1px solid var(--color-cs-border)"
+          border: "none"
         }
       }
     },

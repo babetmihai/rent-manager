@@ -33,32 +33,8 @@ service cloud.firestore {
       allow delete: if isOwner()
     }
 
-    match /versions/{version}/documents/{docId} {
-      allow get: if canGetOwnedOrMissing(version, "documents", docId)
-      allow list: if isOwner()
-      allow create: if isCreatingAsOwner()
-      allow update: if isKeepingOwner()
-      allow delete: if isOwner()
-    }
-
     match /versions/{version}/pago/{docId} {
       allow get: if canGetOwnedOrMissing(version, "pago", docId)
-      allow list: if isOwner()
-      allow create: if isCreatingAsOwner()
-      allow update: if isKeepingOwner()
-      allow delete: if isOwner()
-    }
-
-    match /versions/{version}/bills/{docId} {
-      allow get: if canGetOwnedOrMissing(version, "bills", docId)
-      allow list: if isOwner()
-      allow create: if isCreatingAsOwner()
-      allow update: if isKeepingOwner()
-      allow delete: if isOwner()
-    }
-
-    match /versions/{version}/utilities/{docId} {
-      allow get: if canGetOwnedOrMissing(version, "utilities", docId)
       allow list: if isOwner()
       allow create: if isCreatingAsOwner()
       allow update: if isKeepingOwner()

@@ -51,9 +51,6 @@ export const savePago = async (values) => {
     loginError: null,
     createdBy
   }
-  if (existing.syncStatus === STEP_STATUS.PENDING) {
-    payload.syncStatus = null
-  }
   let item
   if (existing.id) {
     item = await service.update(existing.id, payload)
@@ -80,45 +77,3 @@ export const waitPagoLogin = (id) => new Promise((resolve, reject) => {
     resolve(item)
   })
 })
-
-export const requestPagoSync = async () => {
-  const existing = selectPago()
-  const item = await service.update(existing.id, {
-    syncStatus: STEP_STATUS.PENDING,
-    syncError: null
-  })
-  pagoActions.update(existing.id, item)
-  void wakeTicker()
-  return item
-}
-
-export const requestPagoMatch = async () => {
-  const existing = selectPago()
-  const item = await service.update(existing.id, {
-    matchStatus: STEP_STATUS.PENDING,
-    matchError: null
-  })
-  pagoActions.update(existing.id, item)
-  void wakeTicker()
-  return item
-}
-
-export const requestPagoTenants = async () => {
-  const existing = selectPago()
-  const item = await service.update(existing.id, {
-    tenantStatus: STEP_STATUS.PENDING,
-    tenantError: null
-  })
-  pagoActions.update(existing.id, item)
-  void wakeTicker()
-  return item
-}
-
-export const markPagoOnboarded = async () => {
-  const existing = selectPago()
-  const { id, onboardedAt } = existing
-  if (!id || onboardedAt) return existing
-  const item = await service.update(id, { onboardedAt: Date.now() })
-  pagoActions.update(id, item)
-  return item
-}
