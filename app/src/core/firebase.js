@@ -60,9 +60,13 @@ export const getFirebaseStorage = () => {
   return storageInstance
 }
 
-export const wakeTicker = async () => {
+const wakeMeta = async (id) => {
   const db = getFirestoreDb()
   const version = getFirestoreVersion()
   if (!db || !version) return
-  await setDoc(doc(db, "versions", version, "meta", "wake"), { at: Date.now() })
+  await setDoc(doc(db, "versions", version, "meta", id), { at: Date.now() })
 }
+
+export const wakeTicker = () => wakeMeta("wake")
+
+export const wakeSync = () => wakeMeta("sync")

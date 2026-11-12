@@ -4,16 +4,17 @@ import _ from "lodash"
 import { FieldValue } from "firebase-admin/firestore"
 import { SERVICES_ENABLED, WAKE_CATCHUP_SECONDS, PORT, MACHINE_ID, STEP_STATUS } from "./lib/index.js"
 import { listenWake } from "./lib/wake.js"
+import { startTicker } from "./lib/ticker.js"
 import { auth } from "./lib/firebase.js"
 import { createPago } from "./lib/pago.js"
 import { createServices } from "./lib/services.js"
-import pagoService from "./services/pago.js"
+import emailService from "./services/email.js"
 import purgeService from "./services/purge.js"
 
 
 const SERVICE_BY_NAME = {
   purge: purgeService,
-  pago: pagoService
+  email: emailService
 }
 
 const wakeCatchupSeconds = Number(WAKE_CATCHUP_SECONDS) || 120
@@ -24,28 +25,10 @@ const services = _.map(serviceNames, (name) => {
   return service
 })
 
-let inProgress = false
-let wakeAgain = false
-
-const cycle = async (reason) => {
-  if (inProgress) {
-    wakeAgain = true
-    console.log(`Ticker: cycle in progress, queuing wake (${reason})`)
-    return
-  }
-  inProgress = true
-  try {
-    do {
-      wakeAgain = false
-      console.log(`Ticker: cycle start (${reason}) machine=${MACHINE_ID}`)
-      for (const name of serviceNames) {
-        console.log(`Ticker: ${name} start`)
-        await SERVICE_BY_NAME[name].run()
-      }
-      console.log("Ticker: cycle done")
-    } while (wakeAgain)
-  } finally {
-    inProgress = false
+const runServices = async () => {
+  for (const name of serviceNames) {
+    console.log(`Ticker: ${name} start`)
+    await SERVICE_BY_NAME[name].run()
   }
 }
 
@@ -54,19 +37,13 @@ const runTicker = () => {
     console.log("No services enabled (set SERVICES_ENABLED in .env)")
     return
   }
-
   console.log(`Starting ticker machine=${MACHINE_ID} services=${serviceNames.join(", ")}`)
-  console.log(`Wake-driven; catch-up every ${wakeCatchupSeconds}s`)
-
-  listenWake(() => {
-    void cycle("wake")
+  startTicker({
+    label: "Ticker",
+    run: runServices,
+    listen: listenWake,
+    intervalSeconds: wakeCatchupSeconds
   })
-
-  setInterval(() => {
-    void cycle("catch-up")
-  }, wakeCatchupSeconds * 1000)
-
-  void cycle("startup")
 }
 
 const pagoAccounts = createServices("pago")

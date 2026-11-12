@@ -50,6 +50,7 @@ const LoginScreen = () => {
       <form className={cn("login-screen")} onSubmit={submit}>
         <Stack className={cn("login-panel")} gap="lg">
           <div className={cn("login-intro")}>
+            <img className={cn("brand-mark", "brand-mark-login")} src="/favicon.svg" alt="" />
             <h1 className={cn("login-title")}>{t("rent_manager")}</h1>
             <p className={cn("login-copy")}>{t("sign_in_copy")}</p>
           </div>

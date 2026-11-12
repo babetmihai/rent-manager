@@ -22,6 +22,7 @@ export const {
   SERVICES_ENABLED,
   WAKE_CATCHUP_SECONDS,
   PORT,
+  SYNC_PORT,
   BREVO_API_KEY
 } = process.env
 

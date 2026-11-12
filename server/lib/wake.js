@@ -1,14 +1,9 @@
 import { versionRef } from "./firebase.js"
 
-const wakeRef = () => versionRef.collection("meta").doc("wake")
 
-export const wake = async () => {
-  await wakeRef().set({ at: Date.now() })
-}
-
-export const listenWake = (onWake) => {
+const listenDoc = (id, onWake) => {
   let ready = false
-  return wakeRef().onSnapshot((snap) => {
+  return versionRef.collection("meta").doc(id).onSnapshot((snap) => {
     if (!ready) {
       ready = true
       return
@@ -17,3 +12,7 @@ export const listenWake = (onWake) => {
     onWake()
   })
 }
+
+export const listenWake = (onWake) => listenDoc("wake", onWake)
+
+export const listenSync = (onWake) => listenDoc("sync", onWake)

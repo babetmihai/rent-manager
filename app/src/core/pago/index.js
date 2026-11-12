@@ -5,7 +5,7 @@ import { createServices, getCollectionRef, getDocRef } from "app/core/services"
 import { EMPTY_OBJECT, STEP_STATUS, TRUE } from "app/core"
 import { selectAuthUid } from "app/core/auth"
 import { setLoader, clearLoader } from "app/core/loaders"
-import { wakeTicker } from "app/core/firebase"
+import { wakeSync, wakeTicker } from "app/core/firebase"
 
 
 const service = createServices("pago")
@@ -51,7 +51,7 @@ export const requestInvoiceMail = async (sendKeys) => {
 export const refreshInvoices = async () => {
   const { id } = selectPago()
   await service.update(id, { syncStatus: STEP_STATUS.PENDING, syncError: null })
-  void wakeTicker()
+  void wakeSync()
 }
 
 export const savePago = async (values) => {

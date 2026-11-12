@@ -141,7 +141,10 @@ const TenantsScreen = () => {
         }
         {showList &&
           <div className={cn("tenants-scroll")}>
-            <h2 className={cn("tenants-title", titleClass)}>{t("tenants")}</h2>
+            <h2 className={cn("tenants-title", titleClass)}>
+              <img className={cn("brand-mark")} src="/favicon.svg" alt="" />
+              {t("rent_manager")}
+            </h2>
             {isEmpty &&
               <p className={cn("tenants-empty")}>{t("no_tenants_yet")}</p>
             }
@@ -213,15 +216,15 @@ const TenantsScreen = () => {
                   <div key={id} className={cn("tenant-row")}>
                     <div className={cn("tenant-row-head")}>
                       <div className={cn("tenant-row-main")}>
-                        {hasUnpaid &&
-                          <Checkbox
-                            className={cn("tenant-row-check")}
-                            checked={tenantChecked}
-                            indeterminate={tenantPartial}
-                            aria-label={name}
-                            onChange={() => toggleKeys(invoiceKeys)}
-                          />
-                        }
+                        <Checkbox
+                          className={cn("tenant-row-check")}
+                          checked={tenantChecked}
+                          indeterminate={tenantPartial}
+                          disabled={!hasUnpaid}
+                          aria-label={name}
+                          onChange={() => toggleKeys(invoiceKeys)}
+                        />
+                        <div className={cn("tenant-row-body")}>
                       <UnstyledButton
                         className={cn("tenant-row-open")}
                         aria-expanded={hasUnpaid ? expanded : undefined}
@@ -260,20 +263,22 @@ const TenantsScreen = () => {
                           </div>
                         </div>
                       </UnstyledButton>
-                      </div>
                       <div className={cn("tenant-tags")}>
                         {hasUnsent &&
                           <span className={cn("tenant-tag is-fixed")}>{t("not_sent")}</span>
                         }
                         {_.map(tags, (tag) =>
-                          <button
-                            key={tag}
-                            type="button"
-                            className={cn("tenant-tag")}
-                            onClick={() => updateTenant(id, { tags: _.without(tags, tag) })}
-                          >
+                          <span key={tag} className={cn("tenant-tag")}>
                             {tag}
-                          </button>
+                            <button
+                              type="button"
+                              className={cn("tenant-tag-remove")}
+                              aria-label={t("delete")}
+                              onClick={() => updateTenant(id, { tags: _.without(tags, tag) })}
+                            >
+                              ×
+                            </button>
+                          </span>
                         )}
                         <form className={cn("tenant-tag-form")} onSubmit={(event) => {
                           event.preventDefault()
@@ -284,9 +289,14 @@ const TenantsScreen = () => {
                             value={drafts[id] || ""}
                             placeholder={t("add_tag")}
                             aria-label={t("add_tag")}
-                            onChange={(event) => setDrafts((current) => ({ ...current, [id]: event.currentTarget.value }))}
+                            onChange={(event) => {
+                              const value = event.target.value
+                              setDrafts((current) => ({ ...current, [id]: value }))
+                            }}
                           />
                         </form>
+                      </div>
+                        </div>
                       </div>
                       <UnstyledButton className={cn("tenant-row-edit")} onClick={() => openEdit(tenant)}>
                         {t("edit")}
