@@ -27,7 +27,7 @@ void loadStorage()
             forceColorScheme="light"
             withCssVariables
           >
-            <Notifications position="bottom-right" zIndex={400} />
+            <Notifications className="banners" position="top-center" zIndex={400} />
             <App />
           </MantineProvider>
         </Provider>

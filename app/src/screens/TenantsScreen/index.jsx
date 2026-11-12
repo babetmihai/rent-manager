@@ -36,6 +36,7 @@ const TenantsScreen = () => {
   const [descriptions, setDescriptions] = React.useState({})
   const [emails, setEmails] = React.useState({})
   const [saved, setSaved] = React.useState({})
+  const [editing, setEditing] = React.useState(null)
   const isEmpty = _.isEmpty(tenants)
   const needle = _.toLower(_.trim(search))
   const allTags = _.sortBy(_.uniq(_.flatMap(tenants, (tenant) => {
@@ -192,6 +193,12 @@ const TenantsScreen = () => {
       for (const key of Object.keys(timers)) window.clearTimeout(timers[key])
     }
   }, [])
+
+  const focusEnd = (event) => {
+    const field = event.currentTarget
+    const end = field.value.length
+    requestAnimationFrame(() => field.setSelectionRange(end, end))
+  }
 
   const addTag = async (tenant) => {
     const { id, tags = [] } = tenant
@@ -355,37 +362,55 @@ const TenantsScreen = () => {
                           </span>
                         }
                       </div>
-                      <form className={cn("tenant-email-form")} onSubmit={(event) => event.preventDefault()}>
-                        <input
+                      {editing === `${id}:email`
+                        ? <input
                           className={cn("tenant-row-email")}
                           type="email"
+                          autoFocus
                           value={emails[id] == null ? email || "" : emails[id]}
                           placeholder={t("no_email")}
                           aria-label={t("email")}
+                          onFocus={focusEnd}
                           onChange={(event) => {
                             const value = event.target.value
                             setEmails((current) => ({ ...current, [id]: value }))
                             queueSave(id, "email", value, email || "")
                           }}
+                          onBlur={() => setEditing(null)}
                         />
-                      </form>
+                        : <div
+                          className={cn("tenant-row-email", !_.trim(emails[id] == null ? email : emails[id]) && "is-empty")}
+                          onClick={() => setEditing(`${id}:email`)}
+                        >
+                          {emails[id] == null ? email || t("no_email") : emails[id] || t("no_email")}
+                        </div>
+                      }
                       {hasUnsent && lastSentAt &&
                         <div className={cn("tenant-row-sent")}>{t("last_sent")} {formatSent(lastSentAt)}</div>
                       }
-                      <form className={cn("tenant-description-form")} onSubmit={(event) => event.preventDefault()}>
-                        <textarea
+                      {editing === `${id}:description`
+                        ? <textarea
                           className={cn("tenant-row-description")}
+                          autoFocus
                           value={descriptions[id] == null ? description || "" : descriptions[id]}
                           placeholder={t("description")}
                           aria-label={t("description")}
                           rows={1}
+                          onFocus={focusEnd}
                           onChange={(event) => {
                             const value = event.target.value
                             setDescriptions((current) => ({ ...current, [id]: value }))
                             queueSave(id, "description", value, description || "")
                           }}
+                          onBlur={() => setEditing(null)}
                         />
-                      </form>
+                        : <div
+                          className={cn("tenant-row-description", !_.trim(descriptions[id] == null ? description : descriptions[id]) && "is-empty")}
+                          onClick={() => setEditing(`${id}:description`)}
+                        >
+                          {descriptions[id] == null ? description || t("description") : descriptions[id] || t("description")}
+                        </div>
+                      }
                       <div className={cn("tenant-tags")}>
                         {hasUnpaid &&
                           <span className={cn("tenant-tag is-fixed")}>{t("pending")}</span>

@@ -474,11 +474,6 @@
   white-space: nowrap;
 }
 
-.tenant-email-form,
-.tenant-description-form {
-  margin: 0;
-}
-
 .tenant-row-email,
 .tenant-row-description {
   display: block;
@@ -491,12 +486,17 @@
   font-size: 0.8125rem;
   line-height: 1.2;
   outline: none;
+  cursor: text;
 }
 
 .tenant-row-email {
+  overflow: hidden;
   color: var(--color-cs-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.tenant-row-email.is-empty,
 .tenant-row-email::placeholder {
   color: #8c3a2f;
 }
@@ -504,10 +504,12 @@
 .tenant-row-description {
   min-height: 0;
   color: var(--color-cs-body);
+  white-space: pre-wrap;
   resize: none;
   field-sizing: content;
 }
 
+.tenant-row-description.is-empty,
 .tenant-row-description::placeholder {
   color: var(--color-cs-muted);
 }
@@ -850,6 +852,72 @@
 .tenants-refresh:disabled,
 .tenants-refresh[data-disabled] {
   opacity: 0.6;
+}
+
+.banners {
+  pointer-events: none;
+}
+
+.banners[data-position="top-center"] {
+  top: calc(0.75rem + env(safe-area-inset-top));
+  width: calc(100% - 1.5rem);
+  max-width: 24rem;
+}
+
+.banner {
+  pointer-events: auto;
+  align-items: flex-start;
+  padding: 0.75rem 0.375rem 0.75rem 0.875rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #fffcf8;
+  box-shadow: 0 1px 1px rgb(28 25 21 / 4%), 0 8px 24px rgb(28 25 21 / 10%);
+}
+
+.banner::before {
+  width: 0.1875rem;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  inset-inline-start: 0.4rem;
+  border-radius: 999px;
+  background: #1c1915;
+}
+
+.banner.is-error::before {
+  background: #8c3a2f;
+}
+
+.banner.is-success::before {
+  background: #2f6b4f;
+}
+
+.banner.is-warning::before {
+  background: #8a6a3b;
+}
+
+.banner-title {
+  margin-bottom: 0.15rem;
+  color: #1c1915;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.banner-message {
+  color: #5c564e;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.banner-close {
+  color: #8a8175;
+  border-radius: 999px;
+}
+
+.banner-close:hover {
+  background: rgb(28 25 21 / 6%);
 }
 
 .modal-overlay {

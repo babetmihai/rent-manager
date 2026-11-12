@@ -29,6 +29,14 @@ export const theme = createTheme({
     dark
   },
   components: {
+    Notification: {
+      classNames: {
+        root: "banner",
+        title: "banner-title",
+        description: "banner-message",
+        closeButton: "banner-close"
+      }
+    },
     Button: {
       defaultProps: {
         size: "sm",
