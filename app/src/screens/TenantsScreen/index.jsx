@@ -7,6 +7,7 @@ import { cn, STEP_STATUS, titleClass } from "app/core"
 import { refreshInvoices, requestInvoiceMail, selectPago } from "app/core/pago"
 import { fetchTenants, listenTenants, selectTenants, updateTenant } from "app/core/tenants"
 import { useLoader } from "app/core/loaders"
+import { showBanner } from "app/core/banner"
 import { openCreate, openEdit } from "./actions"
 import _ from "lodash"
 
@@ -22,7 +23,7 @@ const TenantsScreen = () => {
   const { t } = useTranslation()
   const tenants = useSelector(() => selectTenants())
   const pago = useSelector(() => selectPago())
-  const { id: pagoId, syncStatus, sendStatus, sendError } = pago || {}
+  const { id: pagoId, syncStatus, syncError, sendStatus, sendError } = pago || {}
   const refreshing = syncStatus === STEP_STATUS.PENDING
   const sending = sendStatus === STEP_STATUS.PENDING
   const loading = useLoader("tenants")
@@ -85,10 +86,24 @@ const TenantsScreen = () => {
     return listenTenants()
   }, [])
 
+  const jobStatus = React.useRef({})
   React.useEffect(() => {
-    if (sendStatus !== STEP_STATUS.COMPLETED) return
-    setSelected({})
-  }, [sendStatus])
+    const previous = jobStatus.current
+    jobStatus.current = { sendStatus, syncStatus }
+    if (previous.sendStatus === STEP_STATUS.PENDING && sendStatus === STEP_STATUS.COMPLETED) {
+      setSelected({})
+      showBanner("success", t("invoices_sent"))
+    }
+    if (previous.sendStatus === STEP_STATUS.PENDING && sendStatus === STEP_STATUS.FAILED && sendError) {
+      showBanner("error", sendError)
+    }
+    if (previous.syncStatus === STEP_STATUS.PENDING && syncStatus === STEP_STATUS.COMPLETED) {
+      showBanner("success", t("invoices_refreshed"))
+    }
+    if (previous.syncStatus === STEP_STATUS.PENDING && syncStatus === STEP_STATUS.FAILED && syncError) {
+      showBanner("error", syncError)
+    }
+  }, [sendStatus, sendError, syncStatus, syncError, t])
 
   const toggleAll = () => {
     if (allChecked) {
@@ -148,25 +163,41 @@ const TenantsScreen = () => {
             {isEmpty &&
               <p className={cn("tenants-empty")}>{t("no_tenants_yet")}</p>
             }
-            {!isEmpty &&
-              <TextInput
-                className={cn("tenants-search")}
-                placeholder={t("search")}
-                aria-label={t("search")}
-                type="search"
-                size="md"
-                value={search}
-                onChange={(event) => setSearch(event.currentTarget.value)}
-                rightSection={search &&
-                  <CloseButton
-                    className={cn("tenants-search-clear")}
-                    aria-label={t("search")}
-                    onClick={() => setSearch("")}
-                  />
-                }
-                rightSectionPointerEvents="all"
-              />
-            }
+            <div className={cn("tenants-search-row")}>
+              {!isEmpty &&
+                <TextInput
+                  className={cn("tenants-search")}
+                  placeholder={t("search")}
+                  aria-label={t("search")}
+                  type="search"
+                  size="md"
+                  value={search}
+                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  rightSection={search &&
+                    <CloseButton
+                      className={cn("tenants-search-clear")}
+                      aria-label={t("search")}
+                      onClick={() => setSearch("")}
+                    />
+                  }
+                  rightSectionPointerEvents="all"
+                />
+              }
+              {pagoId &&
+                <Button
+                  className={cn("tenants-refresh")}
+                  variant="default"
+                  aria-label={t("refresh")}
+                  loading={refreshing}
+                  onClick={refreshInvoices}
+                >
+                  <span className={cn("tenants-refresh-mark")} />
+                </Button>
+              }
+              <Button className={cn("tenants-create")} variant="default" aria-label={t("add_tenant")} onClick={openCreate}>
+                <span className={cn("tenants-create-mark")} />
+              </Button>
+            </div>
             {!isEmpty &&
               <div className={cn("tenants-tools")}>
                 <UnstyledButton
@@ -218,6 +249,7 @@ const TenantsScreen = () => {
                       <div className={cn("tenant-row-main")}>
                         <Checkbox
                           className={cn("tenant-row-check")}
+                          size="xs"
                           checked={tenantChecked}
                           indeterminate={tenantPartial}
                           disabled={!hasUnpaid}
@@ -229,10 +261,7 @@ const TenantsScreen = () => {
                         className={cn("tenant-row-open")}
                         aria-expanded={hasUnpaid ? expanded : undefined}
                         onClick={() => {
-                          if (!hasUnpaid) {
-                            openEdit(tenant)
-                            return
-                          }
+                          if (!hasUnpaid) return
                           setOpenIds((current) => ({ ...current, [id]: !current[id] }))
                         }}
                       >
@@ -316,6 +345,7 @@ const TenantsScreen = () => {
                               <div key={invoiceId} className={cn("tenant-invoice")}>
                                 <Checkbox
                                   className={cn("tenant-invoice-check")}
+                                  size="xs"
                                   checked={Boolean(selected[key])}
                                   aria-label={label}
                                   onChange={() => toggleKey(key)}
@@ -353,7 +383,7 @@ const TenantsScreen = () => {
               <Checkbox
                 className={cn("tenants-select-all")}
                 aria-label={t("select_all")}
-                size="md"
+                size="sm"
                 checked={allChecked}
                 indeterminate={allPartial}
                 disabled={_.isEmpty(visibleKeys)}
@@ -374,31 +404,6 @@ const TenantsScreen = () => {
                 {sendLabel}
               </Button>
             </div>
-            {sendStatus === STEP_STATUS.FAILED && sendError &&
-              <p className={cn("tenants-send-error")}>{sendError}</p>
-            }
-          </div>
-        }
-        {showList &&
-          <div className={cn("tenants-fabs")}>
-            {pagoId &&
-              <UnstyledButton
-                className={cn("tenants-refresh")}
-                aria-label={t("refresh")}
-                disabled={refreshing}
-                onClick={refreshInvoices}
-              >
-                {refreshing &&
-                  <Loader className={cn("tenants-refresh-loader")} size="xs" color="dark" />
-                }
-                {!refreshing &&
-                  <span className={cn("tenants-refresh-mark")} />
-                }
-              </UnstyledButton>
-            }
-            <UnstyledButton className={cn("tenants-create")} aria-label={t("add_tenant")} onClick={openCreate}>
-              <span className={cn("tenants-create-mark")} />
-            </UnstyledButton>
           </div>
         }
       </div>

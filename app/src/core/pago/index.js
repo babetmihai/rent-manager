@@ -6,6 +6,7 @@ import { EMPTY_OBJECT, STEP_STATUS, TRUE } from "app/core"
 import { selectAuthUid } from "app/core/auth"
 import { setLoader, clearLoader } from "app/core/loaders"
 import { wakeSync, wakeTicker } from "app/core/firebase"
+import { showBanner } from "app/core/banner"
 
 
 const service = createServices("pago")
@@ -22,7 +23,7 @@ export const fetchPago = async () => {
     const list = await service.list({ createdBy })
     pagoActions.set(_.keyBy(list, "id"))
   } catch (error) {
-    console.error("fetch pago failed", error.message)
+    showBanner("error", error.message)
   } finally {
     clearLoader("pago")
   }

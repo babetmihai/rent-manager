@@ -25,8 +25,16 @@ const syncAccount = async (account) => {
       const pointName = locationLabel || service
       const key = _.toLower(_.trim(pointName))
       if (!key) continue
-      const matched = byName[key]
-      if (!matched) continue
+      let matched = byName[key]
+      if (!matched) {
+        const tenant = await tenantService.create({
+          name: _.trim(pointName),
+          createdBy
+        })
+        matched = [tenant]
+        byName[key] = matched
+        tenants.push(tenant)
+      }
       for (const tenant of matched) {
         const { id: tenantId } = tenant
         if (!invoicesByTenant[tenantId]) invoicesByTenant[tenantId] = []

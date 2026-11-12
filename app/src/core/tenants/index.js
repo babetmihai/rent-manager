@@ -5,6 +5,7 @@ import { createServices, getCollectionRef } from "app/core/services"
 import { TRUE } from "app/core"
 import { selectAuthUid } from "app/core/auth"
 import { setLoader, clearLoader } from "app/core/loaders"
+import { showBanner } from "app/core/banner"
 
 
 const service = createServices("tenants")
@@ -20,7 +21,7 @@ export const fetchTenants = async () => {
     const list = await service.list({ createdBy })
     tenantsActions.set(_.keyBy(list, "id"))
   } catch (error) {
-    console.error("fetch tenants failed", error.message)
+    showBanner("error", error.message)
   } finally {
     clearLoader("tenants")
   }

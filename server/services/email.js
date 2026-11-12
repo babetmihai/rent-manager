@@ -22,16 +22,8 @@ const sendInvoices = async ({ client, from, tenant, invoices, overdue }) => {
   for (const invoice of invoices) {
     const { id } = invoice
     const ref = String(id)
-    let content
-    try {
-      content = await client.getInvoicePdf(ref)
-    } catch (error) {
-      const { response } = error
-      const { status } = response || {}
-      if (status === 404 || status === 405) continue
-      throw error
-    }
-    attachments.push({ filename: `${ref}.pdf`, content })
+    const content = await client.getInvoicePdf(ref)
+    if (content) attachments.push({ filename: `${ref}.pdf`, content })
   }
   const lines = _.map(invoices, (invoice) => {
     const { id, dueDate, amountDue, vendor, pointName } = invoice

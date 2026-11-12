@@ -45,12 +45,14 @@
   "invoice_count_other": "{{count}} invoices",
   "new_tenant": "New tenant",
   "edit_tenant": "Edit tenant",
+  "invoices_sent": "Invoices sent",
+  "invoices_refreshed": "Invoices refreshed",
   "tenant_added": "Tenant added",
   "tenant_deleted": "Tenant deleted",
   "tenant_count_one": "{{count}} tenant",
   "tenant_count_other": "{{count}} tenants",
-  "success": "success",
-  "info": "info",
-  "warning": "warning",
-  "error": "error"
+  "success": "Success",
+  "info": "Info",
+  "warning": "Warning",
+  "error": "Error"
 }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import AppScreen from "app/components/AppScreen"
 import { cn, STEP_STATUS } from "app/core"
 import { selectPago } from "app/core/pago"
+import { showBanner } from "app/core/banner"
 import { submitLogin } from "./actions"
 
 
@@ -14,7 +15,6 @@ const LoginScreen = () => {
   const { email: savedEmail, loginStatus } = pago
   const [email, setEmail] = React.useState(savedEmail || "")
   const [password, setPassword] = React.useState("")
-  const [error, setError] = React.useState("")
   const [busy, setBusy] = React.useState(false)
   const pending = loginStatus === STEP_STATUS.PENDING
   const loading = busy || pending
@@ -24,23 +24,16 @@ const LoginScreen = () => {
     setEmail(savedEmail)
   }, [savedEmail])
 
-  React.useEffect(() => {
-    if (loginStatus !== STEP_STATUS.FAILED) return
-    setError(t("pago_login_failed"))
-    setBusy(false)
-  }, [loginStatus])
-
   const submit = (event) => {
     event.preventDefault()
     setBusy(true)
-    setError("")
     submitLogin(email, password).catch((error) => {
       const { message } = error
       let text = message
       if (message === "Pago login failed" || message === "login rejected" || message === "unauthorized") {
         text = t("pago_login_failed")
       }
-      setError(text)
+      showBanner("error", text)
       setBusy(false)
     })
   }
@@ -71,13 +64,9 @@ const LoginScreen = () => {
             size="md"
             autoComplete="current-password"
             value={password}
-            onChange={(event) => {
-              setPassword(event.currentTarget.value)
-              setError("")
-            }}
+            onChange={(event) => setPassword(event.currentTarget.value)}
             required
             disabled={loading}
-            error={error}
           />
           <Button className={cn("login-submit")} type="submit" size="md" loading={loading} fullWidth>
             {t("sign_in")}

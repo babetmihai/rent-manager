@@ -48,13 +48,15 @@
   "invoice_count_other": "{{count}} de facturi",
   "new_tenant": "Chiriaș nou",
   "edit_tenant": "Editează chiriașul",
+  "invoices_sent": "Facturile au fost trimise",
+  "invoices_refreshed": "Facturile au fost actualizate",
   "tenant_added": "Chiriaș adăugat",
   "tenant_deleted": "Chiriaș șters",
   "tenant_count_one": "{{count}} chiriaș",
   "tenant_count_few": "{{count}} chiriași",
   "tenant_count_other": "{{count}} de chiriași",
-  "success": "succes",
-  "info": "info",
-  "warning": "avertisment",
-  "error": "eroare"
+  "success": "Succes",
+  "info": "Info",
+  "warning": "Avertisment",
+  "error": "Eroare"
 }

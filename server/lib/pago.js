@@ -174,13 +174,31 @@ export const createPago = ({
   }
 
   const getInvoicePdf = async (billId) => {
-    const { data } = await authorized({
-      method: "GET",
-      url: `/pos_v1_1/provider/pdfbytes/${billId}`,
-      responseType: "arraybuffer",
-      timeout: 60000
-    })
-    return Buffer.from(data)
+    const urls = [
+      `/pos_v1_1/provider/pdfbytes/${billId}`,
+      `/sdk/bills/invoices/${billId}/pdf`
+    ]
+    for (const url of urls) {
+      try {
+        const { data, headers } = await authorized({
+          method: "GET",
+          url,
+          responseType: "arraybuffer",
+          timeout: 60000,
+          headers: { Accept: "application/pdf, application/octet-stream, */*" }
+        })
+        const content = Buffer.from(data)
+        const type = String((headers || {})["content-type"] || "")
+        const pdf = content.subarray(0, 5).toString() === "%PDF-" || type.includes("pdf")
+        if (content.length && pdf) return content
+      } catch (error) {
+        const { response } = error
+        const { status } = response || {}
+        if (status === 404 || status === 405 || status === 406) continue
+        throw error
+      }
+    }
+    return null
   }
 
   return {
