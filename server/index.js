@@ -1,5 +1,7 @@
 import express from "express"
 import { createHash } from "crypto"
+import { pathToFileURL } from "url"
+import path from "path"
 import _ from "lodash"
 import { FieldValue } from "firebase-admin/firestore"
 import { SERVICES_ENABLED, WAKE_CATCHUP_SECONDS, PORT, MACHINE_ID, STEP_STATUS } from "./lib/index.js"
@@ -50,6 +52,11 @@ const pagoAccounts = createServices("pago")
 
 const app = express()
 app.use(express.json())
+app.use((req, res, next) => {
+  if (!process.env.K_SERVICE) return next()
+  if (req.url.startsWith("/ticker")) req.url = req.url.slice("/ticker".length) || "/"
+  next()
+})
 
 app.get("/health", (req, res) => {
   res.json({ ok: true, services: serviceNames })
@@ -91,8 +98,14 @@ app.post("/auth/pago", async (req, res) => {
   }
 })
 
-const port = Number(PORT) || 3002
-app.listen(port, () => {
-  console.log(`Server started on ${port}`)
-  runTicker()
-})
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+
+if (isMain) {
+  const port = Number(PORT) || 3002
+  app.listen(port, () => {
+    console.log(`Server started on ${port}`)
+    runTicker()
+  })
+}
+
+export { app, runServices }

@@ -22,6 +22,7 @@
   "select_invoices_to_send": "Selectează facturile de trimis",
   "sent": "Trimis",
   "not_sent": "Email netrimis",
+  "pending": "În așteptare",
   "last_sent": "Ultimul trimis",
   "select_all": "Toate",
   "add_tag": "Adaugă etichetă",

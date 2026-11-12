@@ -6,10 +6,33 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "predeploy": [
+        "rm -rf \"$RESOURCE_DIR/server\" && cp -R server \"$RESOURCE_DIR/server\""
+      ],
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ],
   "hosting": {
     "public": "app/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
+      {
+        "source": "/ticker/**",
+        "function": {
+          "functionId": "api",
+          "region": "europe-west1"
+        }
+      },
       {
         "source": "**",
         "destination": "/index.html"

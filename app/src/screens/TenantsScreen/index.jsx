@@ -31,6 +31,7 @@ const TenantsScreen = () => {
   const [openIds, setOpenIds] = React.useState({})
   const [activeTags, setActiveTags] = React.useState([])
   const [unsentOnly, setUnsentOnly] = React.useState(false)
+  const [pendingOnly, setPendingOnly] = React.useState(false)
   const [selected, setSelected] = React.useState({})
   const [drafts, setDrafts] = React.useState({})
   const isEmpty = _.isEmpty(tenants)
@@ -41,8 +42,9 @@ const TenantsScreen = () => {
   })))
   const matches = _.filter(_.orderBy(tenants, ["name"], ["asc"]), (tenant) => {
     const { name, email, description, tags = [], invoices = [] } = tenant || {}
+    const unpaid = _.filter(invoices, "amountDue")
+    if (pendingOnly && _.isEmpty(unpaid)) return false
     if (unsentOnly) {
-      const unpaid = _.filter(invoices, "amountDue")
       const hasUnsent = _.some(unpaid, (invoice) => !invoice.sentAt)
       if (!hasUnsent) return false
     }
@@ -171,7 +173,7 @@ const TenantsScreen = () => {
                   placeholder={t("search")}
                   aria-label={t("search")}
                   type="search"
-                  size="md"
+                  size="xs"
                   value={search}
                   onChange={(event) => setSearch(event.currentTarget.value)}
                   rightSection={search &&
@@ -200,32 +202,49 @@ const TenantsScreen = () => {
               </Button>
             </div>
             {!isEmpty &&
-              <div className={cn("tenants-tools")}>
-                <UnstyledButton
-                  className={cn(unsentOnly ? "tenant-filter is-on" : "tenant-filter")}
-                  onClick={() => setUnsentOnly((current) => !current)}
-                >
-                  {t("not_sent")}
-                </UnstyledButton>
-                {_.map(allTags, (tag) => {
-                  const on = _.includes(activeTags, tag)
-                  let filterClass = "tenant-filter"
-                  if (on) filterClass = "tenant-filter is-on"
-                  return (
-                    <UnstyledButton
-                      key={tag}
-                      className={cn(filterClass)}
-                      onClick={() => {
-                        setActiveTags((current) => {
-                          if (_.includes(current, tag)) return _.without(current, tag)
-                          return [...current, tag]
-                        })
-                      }}
-                    >
-                      {tag}
-                    </UnstyledButton>
-                  )
-                })}
+              <div className={cn("tenants-tools-row")}>
+                <div className={cn("tenants-tools")}>
+                  <UnstyledButton
+                    className={cn(pendingOnly ? "tenant-filter is-on" : "tenant-filter")}
+                    onClick={() => setPendingOnly((current) => !current)}
+                  >
+                    {t("pending")}
+                  </UnstyledButton>
+                  <UnstyledButton
+                    className={cn(unsentOnly ? "tenant-filter is-on" : "tenant-filter")}
+                    onClick={() => setUnsentOnly((current) => !current)}
+                  >
+                    {t("not_sent")}
+                  </UnstyledButton>
+                  {_.map(allTags, (tag) => {
+                    const on = _.includes(activeTags, tag)
+                    let filterClass = "tenant-filter"
+                    if (on) filterClass = "tenant-filter is-on"
+                    return (
+                      <UnstyledButton
+                        key={tag}
+                        className={cn(filterClass)}
+                        onClick={() => {
+                          setActiveTags((current) => {
+                            if (_.includes(current, tag)) return _.without(current, tag)
+                            return [...current, tag]
+                          })
+                        }}
+                      >
+                        {tag}
+                      </UnstyledButton>
+                    )
+                  })}
+                </div>
+                <Checkbox
+                  className={cn("tenants-select-all")}
+                  aria-label={t("select_all")}
+                  size="sm"
+                  checked={allChecked}
+                  indeterminate={allPartial}
+                  disabled={_.isEmpty(visibleKeys)}
+                  onChange={toggleAll}
+                />
               </div>
             }
             {!isEmpty && !hasMatches &&
@@ -289,28 +308,14 @@ const TenantsScreen = () => {
                             <div className={cn("tenant-row-description")}>{description}</div>
                           }
                         </div>
-                        <div className={cn("tenant-row-meta")}>
-                          <div className={cn("tenant-row-note")}>
-                            {hasUnsent && lastSentAt &&
-                              <div className={cn("tenant-row-sent")}>{t("last_sent")} {formatSent(lastSentAt)}</div>
-                            }
-                          </div>
-                          <div className={cn("tenant-row-end")}>
-                            {hasUnpaid &&
-                              <span className={cn(markClass)} />
-                            }
-                            {hasUnpaid &&
-                              <div className={cn("money")}>
-                                <span className={cn("money-value")}>
-                                  {formatAmount(_.sumBy(unpaid, (invoice) => Number(invoice.amountDue)))}
-                                </span>
-                                <span className={cn("money-unit")}>RON</span>
-                              </div>
-                            }
-                          </div>
-                        </div>
+                        {hasUnsent && lastSentAt &&
+                          <div className={cn("tenant-row-sent")}>{t("last_sent")} {formatSent(lastSentAt)}</div>
+                        }
                       </UnstyledButton>
                       <div className={cn("tenant-tags")}>
+                        {hasUnpaid &&
+                          <span className={cn("tenant-tag is-fixed")}>{t("pending")}</span>
+                        }
                         {hasUnsent &&
                           <span className={cn("tenant-tag is-fixed")}>{t("not_sent")}</span>
                         }
@@ -343,7 +348,22 @@ const TenantsScreen = () => {
                           />
                         </form>
                       </div>
+                      {hasUnpaid &&
+                        <UnstyledButton
+                          className={cn("tenant-row-end")}
+                          onClick={() => setOpenIds((current) => ({ ...current, [id]: !current[id] }))}
+                        >
+                          <span className={cn(markClass)} />
+                          <div className={cn("money")}>
+                            <span className={cn("money-value")}>
+                              {formatAmount(_.sumBy(unpaid, (invoice) => Number(invoice.amountDue)))}
+                            </span>
+                            <span className={cn("money-unit")}>RON</span>
+                          </div>
+                        </UnstyledButton>
+                      }
                     </div>
+                  </div>
                     {hasUnpaid &&
                       <Collapse expanded={expanded}>
                         <div className={cn("tenant-invoices")}>
@@ -356,14 +376,6 @@ const TenantsScreen = () => {
                             if (!label) label = pointName
                             return (
                               <div key={invoiceId} className={cn("tenant-invoice")}>
-                                <Checkbox
-                                  className={cn("tenant-invoice-check")}
-                                  size="xs"
-                                  checked={Boolean(selected[key])}
-                                  disabled={!canSend}
-                                  aria-label={label}
-                                  onChange={() => toggleKey(key)}
-                                />
                                 <div className={cn("tenant-invoice-copy")}>
                                   {label &&
                                     <div className={cn("tenant-invoice-vendor")}>{label}</div>
@@ -379,13 +391,20 @@ const TenantsScreen = () => {
                                   <span className={cn("money-value")}>{formatAmount(amountDue)}</span>
                                   <span className={cn("money-unit")}>RON</span>
                                 </div>
+                                <Checkbox
+                                  className={cn("tenant-invoice-check")}
+                                  size="xs"
+                                  checked={Boolean(selected[key])}
+                                  disabled={!canSend}
+                                  aria-label={label}
+                                  onChange={() => toggleKey(key)}
+                                />
                               </div>
                             )
                           })}
                         </div>
                       </Collapse>
                     }
-                  </div>
                   </div>
                 )
               })}
@@ -395,15 +414,6 @@ const TenantsScreen = () => {
         {showList &&
           <div className={cn("tenants-send")}>
             <div className={cn("tenants-send-bar")}>
-              <Checkbox
-                className={cn("tenants-select-all")}
-                aria-label={t("select_all")}
-                size="sm"
-                checked={allChecked}
-                indeterminate={allPartial}
-                disabled={_.isEmpty(visibleKeys)}
-                onChange={toggleAll}
-              />
               <Button
                 className={cn("tenants-send-button")}
                 loading={sending}

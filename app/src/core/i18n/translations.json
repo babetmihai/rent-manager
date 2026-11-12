@@ -20,6 +20,7 @@
   "select_invoices_to_send": "Select invoices to send",
   "sent": "Sent",
   "not_sent": "Email not sent",
+  "pending": "Pending",
   "last_sent": "Last sent",
   "select_all": "All",
   "add_tag": "Add tag",

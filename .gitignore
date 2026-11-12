@@ -11,3 +11,5 @@ dist/
 firebaseConfig.json
 .firebaserc
 app/dist/
+functions/server/
+functions/node_modules/

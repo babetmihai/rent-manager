@@ -8,23 +8,30 @@ import path from "path"
 import { fileURLToPath } from "url"
 
 
-if (!FIREBASE_SERVICE_ACCOUNT) {
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.join(__dirname, "../..")
+const options = {}
+
+if (FIREBASE_SERVICE_ACCOUNT) {
+  const serviceAccount = JSON.parse(fs.readFileSync(path.join(repoRoot, FIREBASE_SERVICE_ACCOUNT), "utf8"))
+  options.credential = cert(serviceAccount)
+}
+
+if (FIREBASE_CONFIG) {
+  const { storageBucket } = JSON.parse(fs.readFileSync(path.join(repoRoot, FIREBASE_CONFIG), "utf8")) || {}
+  options.storageBucket = storageBucket
+}
+
+if (!options.credential && !process.env.K_SERVICE) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT is required")
 }
 
-if (!FIREBASE_CONFIG) {
-  throw new Error("FIREBASE_CONFIG is required")
+if (!options.storageBucket) {
+  const projectId = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT
+  options.storageBucket = `${projectId}.appspot.com`
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const repoRoot = path.join(__dirname, "../..")
-const serviceAccount = JSON.parse(fs.readFileSync(path.join(repoRoot, FIREBASE_SERVICE_ACCOUNT), "utf8"))
-const { storageBucket } = JSON.parse(fs.readFileSync(path.join(repoRoot, FIREBASE_CONFIG), "utf8")) || {}
-
-const app = initializeApp({
-  credential: cert(serviceAccount),
-  storageBucket
-})
+const app = initializeApp(options)
 
 export const db = getFirestore(app)
 export const auth = getAuth(app)
