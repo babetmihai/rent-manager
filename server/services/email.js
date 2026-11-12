@@ -18,8 +18,7 @@ const formatAmount = (value) => {
   })
 }
 
-const sendInvoices = async ({ client, tenant, invoices, overdue }) => {
-  const { name, email } = tenant
+const sendInvoices = async ({ client, to, invoices, overdue }) => {
   const attachments = []
   for (const invoice of invoices) {
     const { id } = invoice
@@ -27,19 +26,23 @@ const sendInvoices = async ({ client, tenant, invoices, overdue }) => {
     const content = await client.getInvoicePdf(ref)
     if (content) attachments.push({ filename: `${ref}.pdf`, content })
   }
-  const lines = _.map(invoices, (invoice) => {
-    const { id, dueDate, amountDue, vendor, pointName } = invoice
-    let due = dueDate
-    if (dueDate) due = dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$3-$2-$1")
-    return _.join(_.compact([vendor, pointName, String(id), due, formatAmount(amountDue)]), " · ")
+  const sections = _.map(_.groupBy(invoices, "tenantId"), (group) => {
+    const { name } = group[0]
+    const lines = _.map(group, (invoice) => {
+      const { id, dueDate, amountDue, vendor, pointName } = invoice
+      let due = dueDate
+      if (dueDate) due = dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$3-$2-$1")
+      return _.join(_.compact([vendor, pointName, String(id), due, formatAmount(amountDue)]), " · ")
+    })
+    return _.join([name, "", ...lines], "\n")
   })
   const total = _.sumBy(invoices, (invoice) => Number(invoice.amountDue))
   let subject = "Invoices"
   if (overdue) subject = "Overdue invoices"
   await sendMail({
-    to: email,
+    to,
     subject,
-    text: _.join(_.compact([name, "", ...lines, "", formatAmount(total)]), "\n"),
+    text: _.join([...sections, "", formatAmount(total)], "\n"),
     attachments
   })
 }
@@ -88,29 +91,36 @@ const sendSelected = async (account) => {
   const client = createPago({ email, password, access_token, refresh_token })
   const tenants = await tenantService.list({ createdBy })
   const byId = _.keyBy(tenants, "id")
-  const grouped = {}
+  const byEmail = {}
   for (const key of sendKeys) {
     const splitAt = key.indexOf(":")
     const tenantId = key.slice(0, splitAt)
     const invoiceId = key.slice(splitAt + 1)
-    if (!grouped[tenantId]) grouped[tenantId] = []
-    grouped[tenantId].push(invoiceId)
-  }
-  for (const tenantId of Object.keys(grouped)) {
     const tenant = byId[tenantId]
     if (!tenant) continue
     const { invoices = [], email: to, name } = tenant
-    if (!to) throw new Error(`${name} has no email`)
-    const wanted = grouped[tenantId]
-    const chosen = _.filter(invoices, (invoice) => _.includes(wanted, String(invoice.id)))
-    if (!chosen.length) continue
-    await sendInvoices({ client, tenant, invoices: chosen, overdue: false })
+    if (!_.trim(to)) throw new Error(`${name} has no email`)
+    const invoice = _.find(invoices, (item) => String(item.id) === invoiceId)
+    if (!invoice) continue
+    const address = _.toLower(_.trim(to))
+    if (!byEmail[address]) byEmail[address] = { to: _.trim(to), invoices: [] }
+    byEmail[address].invoices.push({ ...invoice, name, tenantId })
+  }
+  for (const group of Object.values(byEmail)) {
+    const { to, invoices } = group
+    await sendInvoices({ client, to, invoices, overdue: false })
     const sentAt = Date.now()
-    const next = _.map(invoices, (invoice) => {
-      if (!_.includes(wanted, String(invoice.id))) return invoice
-      return { ...invoice, sentAt }
-    })
-    await tenantService.update(tenantId, { invoices: next })
+    const byTenant = _.groupBy(invoices, "tenantId")
+    for (const tenantId of Object.keys(byTenant)) {
+      const tenant = byId[tenantId]
+      const { invoices: current = [] } = tenant
+      const wanted = _.map(byTenant[tenantId], (invoice) => String(invoice.id))
+      const next = _.map(current, (invoice) => {
+        if (!_.includes(wanted, String(invoice.id))) return invoice
+        return { ...invoice, sentAt }
+      })
+      await tenantService.update(tenantId, { invoices: next })
+    }
   }
 }
 
