@@ -3,7 +3,8 @@ import { CloseButton, Collapse, Loader, TextInput, UnstyledButton } from "@manti
 import { useSelector } from "react-redux"
 import { useTranslation } from "react-i18next"
 import AppScreen from "app/components/AppScreen"
-import { cn, titleClass } from "app/core"
+import { cn, STEP_STATUS, titleClass } from "app/core"
+import { refreshInvoices, selectPago } from "app/core/pago"
 import { fetchTenants, listenTenants, selectTenants } from "app/core/tenants"
 import { useLoader } from "app/core/loaders"
 import { openCreate, openEdit } from "./actions"
@@ -18,6 +19,9 @@ const formatAmount = (value) => Number(value).toLocaleString("ro-RO", {
 const TenantsScreen = () => {
   const { t } = useTranslation()
   const tenants = useSelector(() => selectTenants())
+  const pago = useSelector(() => selectPago())
+  const { id: pagoId, syncStatus } = pago || {}
+  const refreshing = syncStatus === STEP_STATUS.PENDING
   const loading = useLoader("tenants")
   const [search, setSearch] = React.useState("")
   const [openIds, setOpenIds] = React.useState({})
@@ -86,7 +90,6 @@ const TenantsScreen = () => {
                 const expanded = Boolean(openIds[id])
                 const unpaid = _.filter(invoices, "amountDue")
                 const hasUnpaid = !_.isEmpty(unpaid)
-                const hasInvoices = !_.isEmpty(invoices)
                 let markClass = "tenant-row-mark"
                 if (expanded) markClass = "tenant-row-mark tenant-row-mark-open"
                 return (
@@ -94,9 +97,9 @@ const TenantsScreen = () => {
                     <div className={cn("tenant-row-head")}>
                       <UnstyledButton
                         className={cn("tenant-row-open")}
-                        aria-expanded={hasInvoices ? expanded : undefined}
+                        aria-expanded={hasUnpaid ? expanded : undefined}
                         onClick={() => {
-                          if (!hasInvoices) {
+                          if (!hasUnpaid) {
                             openEdit(tenant)
                             return
                           }
@@ -110,7 +113,7 @@ const TenantsScreen = () => {
                             {status}
                           </div>
                           <div className={cn("tenant-row-end")}>
-                            {hasInvoices &&
+                            {hasUnpaid &&
                               <span className={cn(markClass)} />
                             }
                             {hasUnpaid &&
@@ -128,18 +131,15 @@ const TenantsScreen = () => {
                         {t("edit")}
                       </UnstyledButton>
                     </div>
+                    {hasUnpaid &&
                     <Collapse expanded={expanded}>
                       <div className={cn("tenant-invoices")}>
-                        {_.map(invoices, (invoice) => {
-                          const { id: invoiceId, dueDate, amount, amountDue, vendor, pointName } = invoice
-                          const value = amount || amountDue
-                          const isUnpaid = Boolean(amountDue)
+                        {_.map(unpaid, (invoice) => {
+                          const { id: invoiceId, dueDate, amountDue, vendor, pointName } = invoice
                           let due = dueDate
                           if (dueDate) due = dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$1.$2.$3")
                           let label = vendor
                           if (!label) label = pointName
-                          let amountClass = "money"
-                          if (isUnpaid) amountClass = "money is-unpaid"
                           return (
                             <div key={invoiceId} className={cn("tenant-invoice")}>
                               <div className={cn("tenant-invoice-copy")}>
@@ -150,17 +150,16 @@ const TenantsScreen = () => {
                                   <div className={cn("tenant-invoice-due")}>{due}</div>
                                 }
                               </div>
-                              {value &&
-                                <div className={cn(amountClass)}>
-                                  <span className={cn("money-value")}>{formatAmount(value)}</span>
-                                  <span className={cn("money-unit")}>RON</span>
-                                </div>
-                              }
+                              <div className={cn("money", "is-unpaid")}>
+                                <span className={cn("money-value")}>{formatAmount(amountDue)}</span>
+                                <span className={cn("money-unit")}>RON</span>
+                              </div>
                             </div>
                           )
                         })}
                       </div>
                     </Collapse>
+                    }
                   </div>
                 )
               })}
@@ -168,9 +167,26 @@ const TenantsScreen = () => {
           </div>
         }
         {showList &&
-          <UnstyledButton className={cn("tenants-create")} aria-label={t("add_tenant")} onClick={openCreate}>
-            <span className={cn("tenants-create-mark")} />
-          </UnstyledButton>
+          <div className={cn("tenants-fabs")}>
+            {pagoId &&
+              <UnstyledButton
+                className={cn("tenants-refresh")}
+                aria-label={t("refresh")}
+                disabled={refreshing}
+                onClick={refreshInvoices}
+              >
+                {refreshing &&
+                  <Loader className={cn("tenants-refresh-loader")} size="xs" color="dark" />
+                }
+                {!refreshing &&
+                  <span className={cn("tenants-refresh-mark")} />
+                }
+              </UnstyledButton>
+            }
+            <UnstyledButton className={cn("tenants-create")} aria-label={t("add_tenant")} onClick={openCreate}>
+              <span className={cn("tenants-create-mark")} />
+            </UnstyledButton>
+          </div>
         }
       </div>
     </AppScreen>

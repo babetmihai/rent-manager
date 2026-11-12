@@ -42,6 +42,12 @@ export const listenPago = () => {
   })
 }
 
+export const refreshInvoices = async () => {
+  const { id } = selectPago()
+  await service.update(id, { syncStatus: STEP_STATUS.PENDING, syncError: null })
+  void wakeTicker()
+}
+
 export const savePago = async (values) => {
   const createdBy = selectAuthUid()
   const existing = selectPago()

@@ -156,10 +156,14 @@ const mailAccount = async (account) => {
   if (nextAuth) Object.assign(patch, nextAuth)
   if (failed) {
     patch.mailError = failed.message
+    patch.syncStatus = STEP_STATUS.FAILED
+    patch.syncError = failed.message
   } else {
     patch.syncedAt = Date.now()
     patch.mailedAt = Date.now()
     patch.mailError = null
+    patch.syncStatus = STEP_STATUS.COMPLETED
+    patch.syncError = null
   }
   await pagoService.update(id, patch)
 }
@@ -169,13 +173,19 @@ const run = async () => {
   const today = dayjs().format("YYYY-MM-DD")
   const accounts = await pagoService.list()
   for (const account of accounts) {
-    const { id, loginStatus, syncedAt } = account
+    const { id, loginStatus, syncedAt, syncStatus } = account
     if (loginStatus !== STEP_STATUS.COMPLETED) continue
-    if (syncedAt && dayjs(syncedAt).format("YYYY-MM-DD") === today) continue
+    const asked = syncStatus === STEP_STATUS.PENDING
+    const syncedToday = syncedAt && dayjs(syncedAt).format("YYYY-MM-DD") === today
+    if (!asked && syncedToday) continue
     try {
       await mailAccount(account)
     } catch (error) {
-      await pagoService.update(id, { mailError: error.message })
+      await pagoService.update(id, {
+        mailError: error.message,
+        syncStatus: STEP_STATUS.FAILED,
+        syncError: error.message
+      })
     }
   }
 }
