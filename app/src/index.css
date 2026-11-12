@@ -314,11 +314,75 @@
 }
 
 .tenants-empty {
-  margin: 1.5rem 1.25rem 0;
-  color: var(--color-cs-muted);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 2rem 1.5rem calc(2.5rem + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.tenants-empty-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--color-cs-elevated);
+  border-radius: 1.35rem;
+  box-shadow: 0 1px 1px rgb(28 25 21 / 4%), 0 12px 32px rgb(28 25 21 / 7%);
+  color: var(--color-cs-text);
+}
+
+.tenants-empty-house {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tenants-empty-title {
+  max-width: 28rem;
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 1.5rem;
-  line-height: 1.2;
+  font-size: clamp(1.85rem, 6vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.tenants-empty-copy {
+  max-width: 22rem;
+  margin: 0.75rem 0 0;
+  color: var(--color-cs-body);
+  font-size: 1rem;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.tenants-empty-sync {
+  min-width: 9.5rem;
+  margin-top: 1.75rem;
+  padding-inline: 1.35rem;
+}
+
+.tenants-sync-icon {
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tenants-search-row {

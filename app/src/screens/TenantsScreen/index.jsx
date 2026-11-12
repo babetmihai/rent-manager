@@ -217,35 +217,60 @@ const TenantsScreen = () => {
             <Loader color="gray" />
           </div>
         }
-        {showList &&
+        {showList && isEmpty &&
+          <div className={cn("tenants-empty")}>
+            <div className={cn("tenants-empty-mark")}>
+              <svg className={cn("tenants-empty-house")} viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M7.5 15.2 16 7.5l8.5 7.7" />
+                <path d="M10.5 14.6V24.5h11V14.6" />
+                <path d="M14.2 24.5v-4.4h3.6v4.4" />
+              </svg>
+            </div>
+            <h2 className={cn("tenants-empty-title", titleClass)}>{t("no_tenants_yet")}</h2>
+            <p className={cn("tenants-empty-copy")}>{t("no_tenants_copy")}</p>
+            {pagoId &&
+              <Button
+                className={cn("tenants-empty-sync")}
+                loading={refreshing}
+                leftSection={
+                  <svg className={cn("tenants-sync-icon")} viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                }
+                onClick={refreshInvoices}
+              >
+                {t("sync")}
+              </Button>
+            }
+          </div>
+        }
+        {showList && !isEmpty &&
           <div className={cn("tenants-scroll")}>
             <h2 className={cn("tenants-title", titleClass)}>
               <img className={cn("brand-mark")} src="/favicon.svg" alt="" />
               {t("rent_manager")}
             </h2>
-            {isEmpty &&
-              <p className={cn("tenants-empty")}>{t("no_tenants_yet")}</p>
-            }
             <div className={cn("tenants-search-row")}>
-              {!isEmpty &&
-                <TextInput
-                  className={cn("tenants-search")}
-                  placeholder={t("search")}
-                  aria-label={t("search")}
-                  type="search"
-                  size="xs"
-                  value={search}
-                  onChange={(event) => setSearch(event.currentTarget.value)}
-                  rightSection={search &&
-                    <CloseButton
-                      className={cn("tenants-search-clear")}
-                      aria-label={t("search")}
-                      onClick={() => setSearch("")}
-                    />
-                  }
-                  rightSectionPointerEvents="all"
-                />
-              }
+              <TextInput
+                className={cn("tenants-search")}
+                placeholder={t("search")}
+                aria-label={t("search")}
+                type="search"
+                size="xs"
+                value={search}
+                onChange={(event) => setSearch(event.currentTarget.value)}
+                rightSection={search &&
+                  <CloseButton
+                    className={cn("tenants-search-clear")}
+                    aria-label={t("search")}
+                    onClick={() => setSearch("")}
+                  />
+                }
+                rightSectionPointerEvents="all"
+              />
               {pagoId &&
                 <Button
                   className={cn("tenants-refresh")}
@@ -510,7 +535,7 @@ const TenantsScreen = () => {
             </div>
           </div>
         }
-        {showList &&
+        {showList && !isEmpty &&
           <div className={cn("tenants-send")}>
             <div className={cn("tenants-send-bar")}>
               <Button

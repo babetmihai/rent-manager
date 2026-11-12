@@ -1,6 +1,8 @@
 import _ from "lodash"
 import { FieldValue } from "firebase-admin/firestore"
 import { createServices } from "../lib/services.js"
+import { versionRef } from "../lib/firebase.js"
+import { claimLock, releaseLock } from "../lib/lock.js"
 import { STEP_STATUS } from "../lib/index.js"
 import { createPago } from "../lib/pago.js"
 import { sendMail } from "../lib/mail.js"
@@ -42,19 +44,35 @@ const sendInvoices = async ({ client, tenant, invoices, overdue }) => {
   })
 }
 
+const hold = async (id, step, work) => {
+  const ref = versionRef.collection("pago").doc(id)
+  const token = await claimLock(ref, step)
+  if (!token) return
+  try {
+    const fresh = await pagoService.get(id)
+    if (fresh[`${step}Status`] !== STEP_STATUS.PENDING) return
+    await work(fresh)
+  } finally {
+    await releaseLock(ref, token, step)
+  }
+}
+
 const runPendingLogin = async () => {
   const accounts = await pagoService.list()
   const pending = _.filter(accounts, { loginStatus: STEP_STATUS.PENDING })
   for (const account of pending) {
-    const { id, email, password } = account
+    const { id } = account
     try {
-      const client = createPago({ email, password })
-      const auth = await client.login()
-      await pagoService.update(id, {
-        ...auth,
-        loginStatus: STEP_STATUS.COMPLETED,
-        loginError: null,
-        password: FieldValue.delete()
+      await hold(id, "login", async (fresh) => {
+        const { email, password } = fresh
+        const client = createPago({ email, password })
+        const auth = await client.login()
+        await pagoService.update(id, {
+          ...auth,
+          loginStatus: STEP_STATUS.COMPLETED,
+          loginError: null,
+          password: FieldValue.delete()
+        })
       })
     } catch (error) {
       await pagoService.update(id, {
@@ -102,11 +120,13 @@ const runPendingSend = async () => {
   for (const account of pending) {
     const { id } = account
     try {
-      await sendSelected(account)
-      await pagoService.update(id, {
-        sendStatus: STEP_STATUS.COMPLETED,
-        sendError: null,
-        sendKeys: []
+      await hold(id, "send", async (fresh) => {
+        await sendSelected(fresh)
+        await pagoService.update(id, {
+          sendStatus: STEP_STATUS.COMPLETED,
+          sendError: null,
+          sendKeys: []
+        })
       })
     } catch (error) {
       await pagoService.update(id, {
