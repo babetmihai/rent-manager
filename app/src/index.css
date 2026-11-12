@@ -836,24 +836,15 @@
   --button-bd: var(--color-cs-border-hover);
 }
 
-.tenants-refresh-mark {
-  position: relative;
-  width: 0.9rem;
-  height: 0.9rem;
-  border: 1.5px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 999px;
-}
-
-.tenants-refresh-mark::after {
-  content: "";
-  position: absolute;
-  top: -0.14rem;
-  right: -0.08rem;
-  border-top: 0.28rem solid currentColor;
-  border-left: 0.22rem solid transparent;
-  border-right: 0.22rem solid transparent;
-  transform: rotate(40deg);
+.tenants-refresh-icon {
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tenants-refresh:disabled,
