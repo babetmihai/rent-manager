@@ -16,7 +16,7 @@ const formatAmount = (value) => {
   })
 }
 
-const sendInvoices = async ({ client, from, tenant, invoices, overdue }) => {
+const sendInvoices = async ({ client, tenant, invoices, overdue }) => {
   const { name, email } = tenant
   const attachments = []
   for (const invoice of invoices) {
@@ -35,7 +35,6 @@ const sendInvoices = async ({ client, from, tenant, invoices, overdue }) => {
   let subject = "Invoices"
   if (overdue) subject = "Overdue invoices"
   await sendMail({
-    from,
     to: email,
     subject,
     text: _.join(_.compact([name, "", ...lines, "", formatAmount(total)]), "\n"),
@@ -87,7 +86,7 @@ const sendSelected = async (account) => {
     const wanted = grouped[tenantId]
     const chosen = _.filter(invoices, (invoice) => _.includes(wanted, String(invoice.id)))
     if (!chosen.length) continue
-    await sendInvoices({ client, from: email, tenant, invoices: chosen, overdue: false })
+    await sendInvoices({ client, tenant, invoices: chosen, overdue: false })
     const sentAt = Date.now()
     const next = _.map(invoices, (invoice) => {
       if (!_.includes(wanted, String(invoice.id))) return invoice

@@ -62,7 +62,8 @@ const TenantsScreen = () => {
     return _.filter(pending, (invoice) => !invoice.sentAt)
   }
   const visibleKeys = _.flatMap(matches, (tenant) => {
-    const { id, invoices = [] } = tenant || {}
+    const { id, email, invoices = [] } = tenant || {}
+    if (!_.trim(email)) return []
     return _.map(pendingInvoices(invoices), (invoice) => `${id}:${invoice.id}`)
   })
   const allChecked = visibleKeys.length > 0 && _.every(visibleKeys, (key) => selected[key])
@@ -232,12 +233,13 @@ const TenantsScreen = () => {
             }
             <div className={cn("tenants-list")}>
               {_.map(matches, (tenant) => {
-                const { id, name, description, tags = [], invoices = [] } = tenant || {}
+                const { id, name, description, email, tags = [], invoices = [] } = tenant || {}
                 const expanded = Boolean(openIds[id])
                 const unpaid = pendingInvoices(invoices)
                 const hasUnpaid = !_.isEmpty(unpaid)
+                const canSend = Boolean(_.trim(email))
                 const invoiceKeys = _.map(unpaid, (invoice) => `${id}:${invoice.id}`)
-                const tenantChecked = hasUnpaid && _.every(invoiceKeys, (key) => selected[key])
+                const tenantChecked = canSend && hasUnpaid && _.every(invoiceKeys, (key) => selected[key])
                 const tenantPartial = !tenantChecked && _.some(invoiceKeys, (key) => selected[key])
                 const hasUnsent = _.some(unpaid, (invoice) => !invoice.sentAt)
                 const lastSentAt = _.max(_.map(_.filter(invoices, "sentAt"), "sentAt"))
@@ -246,17 +248,33 @@ const TenantsScreen = () => {
                 return (
                   <div key={id} className={cn("tenant-row")}>
                     <div className={cn("tenant-row-head")}>
+                      <Checkbox
+                        className={cn("tenant-row-check")}
+                        size="sm"
+                        checked={tenantChecked}
+                        indeterminate={tenantPartial}
+                        disabled={!canSend || !hasUnpaid}
+                        aria-label={name}
+                        onChange={() => toggleKeys(invoiceKeys)}
+                      />
                       <div className={cn("tenant-row-main")}>
-                        <Checkbox
-                          className={cn("tenant-row-check")}
-                          size="xs"
-                          checked={tenantChecked}
-                          indeterminate={tenantPartial}
-                          disabled={!hasUnpaid}
-                          aria-label={name}
-                          onChange={() => toggleKeys(invoiceKeys)}
-                        />
-                        <div className={cn("tenant-row-body")}>
+                      <div className={cn("tenant-row-title")}>
+                        <UnstyledButton
+                          className={cn("tenant-row-name-hit")}
+                          onClick={() => {
+                            if (!hasUnpaid) return
+                            setOpenIds((current) => ({ ...current, [id]: !current[id] }))
+                          }}
+                        >
+                          <div className={cn("tenant-row-name", titleClass)}>{name}</div>
+                        </UnstyledButton>
+                        <UnstyledButton className={cn("tenant-row-edit")} aria-label={t("edit")} onClick={() => openEdit(tenant)}>
+                          <svg className={cn("tenant-row-edit-icon")} viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
+                        </UnstyledButton>
+                      </div>
                       <UnstyledButton
                         className={cn("tenant-row-open")}
                         aria-expanded={hasUnpaid ? expanded : undefined}
@@ -266,7 +284,7 @@ const TenantsScreen = () => {
                         }}
                       >
                         <div className={cn("tenant-row-copy")}>
-                          <div className={cn("tenant-row-name", titleClass)}>{name}</div>
+                          <div className={cn("tenant-row-email")}>{canSend ? email : t("no_email")}</div>
                           {description &&
                             <div className={cn("tenant-row-description")}>{description}</div>
                           }
@@ -325,11 +343,6 @@ const TenantsScreen = () => {
                           />
                         </form>
                       </div>
-                        </div>
-                      </div>
-                      <UnstyledButton className={cn("tenant-row-edit")} onClick={() => openEdit(tenant)}>
-                        {t("edit")}
-                      </UnstyledButton>
                     </div>
                     {hasUnpaid &&
                       <Collapse expanded={expanded}>
@@ -347,6 +360,7 @@ const TenantsScreen = () => {
                                   className={cn("tenant-invoice-check")}
                                   size="xs"
                                   checked={Boolean(selected[key])}
+                                  disabled={!canSend}
                                   aria-label={label}
                                   onChange={() => toggleKey(key)}
                                 />
@@ -371,6 +385,7 @@ const TenantsScreen = () => {
                         </div>
                       </Collapse>
                     }
+                  </div>
                   </div>
                 )
               })}

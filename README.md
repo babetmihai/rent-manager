@@ -16,7 +16,7 @@ npm start
 
 UI at `http://localhost:5173`. App health at `http://localhost:3002/health`. Pago sync is a separate process (`npm run sync`, health at `http://localhost:3003/health`). It pulls invoices once a day for every signed-in account, and again when refresh marks that account pending. Deploy it on its own. The app process serves sign-in, mail, and purge.
 
-Firebase Auth needs Email/Password and Anonymous sign-in. `BREVO_API_KEY` sends the mail. The From address is the Pago account email, and that address has to be a verified Brevo sender.
+Firebase Auth needs Email/Password and Anonymous sign-in. `BREVO_API_KEY` sends the mail from rent.manager@brevosend.com.
 
 ## SDK
 

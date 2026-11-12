@@ -3,6 +3,7 @@
   "tenants": "Tenants",
   "description": "Description",
   "email": "Email",
+  "no_email": "No email",
   "password": "Password",
   "name": "Name",
   "search": "Search",

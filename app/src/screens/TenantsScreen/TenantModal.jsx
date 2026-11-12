@@ -55,7 +55,7 @@ const TenantModal = ({ tenant, onSubmit, onDelete, onClose = hideModal }) => {
   return (
     <Modal className={cn("tenant-modal")} opened onClose={onClose} title={title}>
       <form className={cn("tenant-modal-form")} onSubmit={submit}>
-        <Stack gap="md">
+        <Stack gap="sm">
           <TextInput
             className={cn("tenant-modal-name")}
             label={t("name")}
@@ -71,7 +71,7 @@ const TenantModal = ({ tenant, onSubmit, onDelete, onClose = hideModal }) => {
             size="md"
             value={description}
             onChange={(event) => setDescription(event.currentTarget.value)}
-            minRows={3}
+            minRows={2}
             autosize
             disabled={busy}
           />
@@ -95,7 +95,7 @@ const TenantModal = ({ tenant, onSubmit, onDelete, onClose = hideModal }) => {
             onChange={setTags}
             onSearchChange={setDraft}
           />
-          <Button className={cn("tenant-modal-submit", "mt-2")} type="submit" size="md" loading={busy} fullWidth>
+          <Button className={cn("tenant-modal-submit")} type="submit" size="md" loading={busy} fullWidth>
             {t("save")}
           </Button>
           {isEdit &&

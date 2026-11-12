@@ -3,6 +3,7 @@
   "tenants": "Chiriași",
   "description": "Descriere",
   "email": "Email",
+  "no_email": "Fără email",
   "password": "Parolă",
   "name": "Nume",
   "search": "Caută",

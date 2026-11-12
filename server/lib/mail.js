@@ -3,10 +3,9 @@ import _ from "lodash"
 import { BREVO_API_KEY } from "./index.js"
 
 
-export const sendMail = async ({ from, to, subject, text, attachments }) => {
+export const sendMail = async ({ to, subject, text, attachments }) => {
   if (!BREVO_API_KEY) throw new Error("BREVO_API_KEY is required")
-  const named = /^(.*) <([^>]+)>$/.exec(from)
-  const sender = named ? { name: named[1], email: named[2] } : { email: from }
+  const sender = { name: "Rent Manager", email: "rent.manager@brevosend.com" }
   const payload = {
     sender,
     to: [{ email: to }],
