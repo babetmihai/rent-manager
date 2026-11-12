@@ -365,15 +365,7 @@ const TenantsScreen = () => {
                       />
                       <div className={cn("tenant-row-main")}>
                       <div className={cn("tenant-row-title")}>
-                        <UnstyledButton
-                          className={cn("tenant-row-name-hit")}
-                          onClick={() => {
-                            if (!hasUnpaid) return
-                            setOpenIds((current) => ({ ...current, [id]: !current[id] }))
-                          }}
-                        >
-                          <div className={cn("tenant-row-name", titleClass)}>{name}</div>
-                        </UnstyledButton>
+                        <div className={cn("tenant-row-name", titleClass)}>{name}</div>
                         {saved[id] &&
                           <span className={cn("tenant-row-save", saved[id] === "saved" && "is-saved")}>
                             {saved[id] === "saving" &&
