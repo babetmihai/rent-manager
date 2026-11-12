@@ -102,74 +102,86 @@ const mailAccount = async (account) => {
       }
     }
   }
-  const today = dayjs().format("YYYY-MM-DD")
-  let failed = null
   for (const tenant of tenants) {
-    const { id: tenantId, notifications, email: to, mailed: sent = {} } = tenant
+    const { id: tenantId, invoices: current = [] } = tenant
     let invoices = invoicesByTenant[tenantId]
     if (!invoices) invoices = []
-    await tenantService.update(tenantId, { invoices })
-    if (notifications !== true) continue
-    if (!to) continue
-    if (!invoices.length) continue
-    try {
-      const fresh = []
-      const overdue = []
-      for (const invoice of invoices) {
-        const { id: invoiceId, amountDue, dueDate } = invoice
-        if (!amountDue) continue
-        const ref = String(invoiceId)
-        const mark = sent[ref]
-        if (mark === "overdue") continue
-        let isOverdue = false
-        if (dueDate) {
-          const iso = dueDate.replace(/^(\d{2})-(\d{2})-(\d{4}).*$/, "$3-$2-$1")
-          isOverdue = iso < today
-        }
-        if (isOverdue) {
-          overdue.push(invoice)
-          continue
-        }
-        if (mark === "new") continue
-        fresh.push(invoice)
-      }
-      const mailed = { ...sent }
-      if (fresh.length) {
-        await sendInvoices({ client, from: email, tenant, invoices: fresh, overdue: false })
-        for (const invoice of fresh) mailed[String(invoice.id)] = "new"
-        await tenantService.update(tenantId, { mailed, mailError: null })
-      }
-      if (overdue.length) {
-        await sendInvoices({ client, from: email, tenant, invoices: overdue, overdue: true })
-        for (const invoice of overdue) mailed[String(invoice.id)] = "overdue"
-        await tenantService.update(tenantId, { mailed, mailError: null })
-      }
-    } catch (error) {
-      failed = error
-      await tenantService.update(tenantId, { mailError: error.message })
-    }
+    const previous = _.keyBy(current, (invoice) => String(invoice.id))
+    const next = _.map(invoices, (invoice) => {
+      const prior = previous[String(invoice.id)] || {}
+      const { sentAt } = prior
+      if (!sentAt) return invoice
+      return { ...invoice, sentAt }
+    })
+    await tenantService.update(tenantId, { invoices: next })
   }
   const { auth: nextAuth } = client
   const patch = {
-    password: FieldValue.delete()
+    password: FieldValue.delete(),
+    syncedAt: Date.now(),
+    syncStatus: STEP_STATUS.COMPLETED,
+    syncError: null,
+    mailError: null
   }
   if (nextAuth) Object.assign(patch, nextAuth)
-  if (failed) {
-    patch.mailError = failed.message
-    patch.syncStatus = STEP_STATUS.FAILED
-    patch.syncError = failed.message
-  } else {
-    patch.syncedAt = Date.now()
-    patch.mailedAt = Date.now()
-    patch.mailError = null
-    patch.syncStatus = STEP_STATUS.COMPLETED
-    patch.syncError = null
-  }
   await pagoService.update(id, patch)
+}
+
+const sendSelected = async (account) => {
+  const { email, password, access_token, refresh_token, createdBy, sendKeys = [] } = account
+  const client = createPago({ email, password, access_token, refresh_token })
+  const tenants = await tenantService.list({ createdBy })
+  const byId = _.keyBy(tenants, "id")
+  const grouped = {}
+  for (const key of sendKeys) {
+    const splitAt = key.indexOf(":")
+    const tenantId = key.slice(0, splitAt)
+    const invoiceId = key.slice(splitAt + 1)
+    if (!grouped[tenantId]) grouped[tenantId] = []
+    grouped[tenantId].push(invoiceId)
+  }
+  for (const tenantId of Object.keys(grouped)) {
+    const tenant = byId[tenantId]
+    if (!tenant) continue
+    const { invoices = [], email: to, name } = tenant
+    if (!to) throw new Error(`${name} has no email`)
+    const wanted = grouped[tenantId]
+    const chosen = _.filter(invoices, (invoice) => _.includes(wanted, String(invoice.id)))
+    if (!chosen.length) continue
+    await sendInvoices({ client, from: email, tenant, invoices: chosen, overdue: false })
+    const sentAt = Date.now()
+    const next = _.map(invoices, (invoice) => {
+      if (!_.includes(wanted, String(invoice.id))) return invoice
+      return { ...invoice, sentAt }
+    })
+    await tenantService.update(tenantId, { invoices: next })
+  }
+}
+
+const runPendingSend = async () => {
+  const accounts = await pagoService.list()
+  const pending = _.filter(accounts, { sendStatus: STEP_STATUS.PENDING })
+  for (const account of pending) {
+    const { id } = account
+    try {
+      await sendSelected(account)
+      await pagoService.update(id, {
+        sendStatus: STEP_STATUS.COMPLETED,
+        sendError: null,
+        sendKeys: []
+      })
+    } catch (error) {
+      await pagoService.update(id, {
+        sendStatus: STEP_STATUS.FAILED,
+        sendError: error.message
+      })
+    }
+  }
 }
 
 const run = async () => {
   await runPendingLogin()
+  await runPendingSend()
   const today = dayjs().format("YYYY-MM-DD")
   const accounts = await pagoService.list()
   for (const account of accounts) {

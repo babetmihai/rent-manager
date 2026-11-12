@@ -106,6 +106,22 @@
     color: var(--color-cs-elevated);
   }
 
+  .button[data-variant="filled"]:disabled,
+  .button[data-variant="filled"][data-disabled] {
+    --button-bg: #e4dfd6 !important;
+    --button-color: #a39b90 !important;
+    background: #e4dfd6 !important;
+    color: #a39b90 !important;
+    opacity: 1;
+  }
+
+  .button[data-variant="filled"]:disabled .mantine-Button-label,
+  .button[data-variant="filled"]:disabled .mantine-Button-inner,
+  .button[data-variant="filled"][data-disabled] .mantine-Button-label,
+  .button[data-variant="filled"][data-disabled] .mantine-Button-inner {
+    color: #a39b90;
+  }
+
   .button[data-variant="subtle"] {
     --button-color: var(--color-cs-accent-2) !important;
     color: var(--color-cs-accent-2);
@@ -125,6 +141,7 @@
   .text-input-label,
   .password-input-label,
   .mantine-Textarea-label,
+  .mantine-TagsInput-label,
   .mantine-Switch-label {
     margin-bottom: 0.375rem;
     color: var(--color-cs-muted);
@@ -296,7 +313,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.5rem 1rem calc(8.5rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 1rem calc(12rem + env(safe-area-inset-bottom));
 }
 
 .tenants-no-matches {
@@ -321,14 +338,33 @@
   padding: 1.125rem 1.125rem 1rem;
 }
 
+.tenant-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.tenant-row-check {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
 .tenant-row-open {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 1.25rem;
-  width: 100%;
+  min-width: 0;
   min-height: 2.75rem;
   padding: 0;
   text-align: left;
+}
+
+.tenant-row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .tenant-row-name {
@@ -343,12 +379,29 @@
   white-space: nowrap;
 }
 
+.tenant-row-description {
+  padding-right: 3.5rem;
+  color: var(--color-cs-body);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
 .tenant-row-meta {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
   min-height: 1.75rem;
+}
+
+.tenant-row-note {
+  min-width: 0;
+}
+
+.tenant-row-sent {
+  color: var(--color-cs-muted);
+  font-size: 0.75rem;
 }
 
 .tenant-row-end {
@@ -384,6 +437,89 @@
 
 .tenant-row-status.is-on .tenant-row-status-mark {
   background: #2f6b4f;
+}
+
+.tenant-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+
+.tenant-tag::after {
+  content: "×";
+  margin-left: 0.35rem;
+}
+
+.tenant-tag.is-fixed::after {
+  content: none;
+}
+
+.tenant-tag,
+.tenant-filter {
+  min-height: 1.75rem;
+  padding: 0.2rem 0.625rem;
+  border: 1px solid var(--color-cs-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-cs-body);
+  font-size: 0.75rem;
+}
+
+.tenant-filter.is-on {
+  background: var(--color-cs-text);
+  border-color: var(--color-cs-text);
+  color: var(--color-cs-elevated);
+}
+
+.tenant-tag-form {
+  flex: 0 0 auto;
+}
+
+.tenant-tag-input {
+  width: 5.5rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.625rem;
+  border: 1px dashed var(--color-cs-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-cs-text);
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.tenant-tag-input::placeholder {
+  color: var(--color-cs-muted);
+}
+
+.tenants-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.25rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tenants-tools::-webkit-scrollbar {
+  display: none;
+}
+
+.tenants-tools::after {
+  content: "";
+  flex: 0 0 0.75rem;
+}
+
+.tenants-tools > .tenant-filter:first-child {
+  margin-left: 1.25rem;
+}
+
+.tenant-filter {
+  flex-shrink: 0;
 }
 
 .tenant-row-edit {
@@ -441,8 +577,7 @@
 
 .tenant-invoice {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
   gap: 0.75rem;
   margin: 0 0.375rem;
   padding: 0.875rem 0.75rem;
@@ -450,7 +585,14 @@
 }
 
 .tenant-invoice-copy {
+  flex: 1;
   min-width: 0;
+}
+
+.tenant-invoice-sent {
+  margin-top: 0.2rem;
+  color: #2f6b4f;
+  font-size: 0.75rem;
 }
 
 .tenant-invoice-vendor {
@@ -467,10 +609,72 @@
   letter-spacing: 0.02em;
 }
 
+.tenants-send {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  z-index: 30;
+}
+
+.tenants-send-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.tenants-select-all {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid var(--color-cs-border-hover);
+  border-radius: 999px;
+  background: var(--color-cs-elevated);
+  box-shadow: 0 4px 16px rgb(28 25 21 / 12%);
+  --checkbox-color: #1c1915;
+  --checkbox-icon-color: #fffcf8;
+}
+
+.tenants-select-all[data-disabled] {
+  opacity: 0.4;
+}
+
+.tenants-send-button {
+  flex: 1;
+  min-width: 0;
+}
+
+.tenants-send-button .mantine-Button-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenants-send-icon {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tenants-send-error {
+  margin: 0.5rem 0 0;
+  color: #8c3a2f;
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
 .tenants-fabs {
   position: fixed;
   right: 1.25rem;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  bottom: calc(6rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -483,16 +687,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  border-radius: 999px;
-}
-
-.tenants-refresh {
   width: 2.75rem;
   height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--color-cs-border-hover);
+  border-radius: 999px;
   background: var(--color-cs-elevated);
   color: var(--color-cs-text);
-  box-shadow: 0 4px 16px rgb(28 25 21 / 16%);
+  box-shadow: 0 4px 16px rgb(28 25 21 / 12%);
 }
 
 .tenants-refresh:disabled {
@@ -522,14 +724,6 @@
   border-left: 0.22rem solid transparent;
   border-right: 0.22rem solid transparent;
   transform: rotate(40deg);
-}
-
-.tenants-create {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: var(--color-cs-text);
-  color: var(--color-cs-elevated);
-  box-shadow: 0 8px 24px rgb(28 25 21 / 28%);
 }
 
 .tenants-create-mark {
@@ -594,13 +788,39 @@
 }
 
 .tenant-modal-form .text-input-field,
-.tenant-modal-form .mantine-Textarea-input {
+.tenant-modal-form .mantine-Textarea-input,
+.tenant-modal-form .mantine-TagsInput-input {
   --input-bg: #efece6;
   --input-color: #1c1915;
   --input-bd: rgb(28 25 21 / 12%);
   background-color: #efece6;
   color: #1c1915;
   border-color: rgb(28 25 21 / 12%);
+}
+
+.tenant-modal-form .mantine-TagsInput-input {
+  height: auto;
+  min-height: 3.25rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.tenant-modal-form .mantine-TagsInput-pill {
+  height: 1.75rem;
+  padding-inline: 0.7rem 0.15rem;
+  border: 1px solid rgb(28 25 21 / 12%);
+  border-radius: 999px;
+  background: #fffcf8;
+  color: #1c1915;
+  font-size: 0.75rem;
+}
+
+.tenant-modal-form .mantine-TagsInput-inputField {
+  color: #1c1915;
+}
+
+.tenant-modal-form .mantine-TagsInput-inputField::placeholder {
+  color: #8a8175;
 }
 
 .tenant-modal-delete {

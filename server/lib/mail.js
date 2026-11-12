@@ -1,15 +1,28 @@
-import nodemailer from "nodemailer"
-import { SMTP_URL } from "./index.js"
+import axios from "axios"
+import _ from "lodash"
+import { BREVO_API_KEY } from "./index.js"
 
 
 export const sendMail = async ({ from, to, subject, text, attachments }) => {
-  if (!SMTP_URL) throw new Error("SMTP_URL is required")
-  const transport = nodemailer.createTransport(SMTP_URL)
-  await transport.sendMail({
-    from,
-    to,
+  if (!BREVO_API_KEY) throw new Error("BREVO_API_KEY is required")
+  const named = /^(.*) <([^>]+)>$/.exec(from)
+  const sender = named ? { name: named[1], email: named[2] } : { email: from }
+  const payload = {
+    sender,
+    to: [{ email: to }],
     subject,
-    text,
-    attachments
+    textContent: text
+  }
+  if (attachments.length) {
+    payload.attachment = _.map(attachments, (file) => ({
+      name: file.filename,
+      content: Buffer.from(file.content).toString("base64")
+    }))
+  }
+  await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+    headers: {
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json"
+    }
   })
 }

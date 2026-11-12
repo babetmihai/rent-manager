@@ -1,31 +1,37 @@
 import React from "react"
-import { Button, Modal, Stack, Switch, Textarea, TextInput } from "@mantine/core"
+import { Button, Modal, Stack, TagsInput, Textarea, TextInput } from "@mantine/core"
 import { hideModal } from "app/core/modals"
 import { cn } from "app/core"
 import { useTranslation } from "react-i18next"
+import _ from "lodash"
 
 
 const TenantModal = ({ tenant, onSubmit, onDelete, onClose = hideModal }) => {
   const { t } = useTranslation()
-  const { name: initialName, email: initialEmail, description: initialDescription, notifications: initialNotifications } = tenant || {}
+  const { name: initialName, email: initialEmail, description: initialDescription, tags: initialTags = [] } = tenant || {}
   const isEdit = Boolean((tenant || {}).id)
-  let notificationsOn = initialNotifications !== false
-  if (isEdit) notificationsOn = initialNotifications === true
   const [name, setName] = React.useState(initialName || "")
   const [email, setEmail] = React.useState(initialEmail || "")
   const [description, setDescription] = React.useState(initialDescription || "")
-  const [notifications, setNotifications] = React.useState(notificationsOn)
+  const [tags, setTags] = React.useState(initialTags)
+  const [draft, setDraft] = React.useState("")
   const [busy, setBusy] = React.useState(false)
 
   const submit = async (event) => {
     event.preventDefault()
+    const raw = _.trim(draft)
+    let nextTags = tags
+    if (raw) {
+      const exists = _.some(tags, (tag) => _.toLower(tag) === _.toLower(raw))
+      if (!exists) nextTags = [...tags, raw]
+    }
     setBusy(true)
     try {
       await onSubmit({
         name,
         email,
         description,
-        notifications
+        tags: nextTags
       })
       onClose()
     } finally {
@@ -78,13 +84,16 @@ const TenantModal = ({ tenant, onSubmit, onDelete, onClose = hideModal }) => {
             onChange={(event) => setEmail(event.currentTarget.value)}
             disabled={busy}
           />
-          <Switch
-            className={cn("tenant-modal-active", "min-h-11")}
+          <TagsInput
+            className={cn("tenant-modal-tags")}
+            label={t("tags")}
+            placeholder={t("add_tag")}
             size="md"
-            label={t("active")}
-            checked={notifications}
-            onChange={(event) => setNotifications(event.currentTarget.checked)}
+            value={tags}
+            searchValue={draft}
             disabled={busy}
+            onChange={setTags}
+            onSearchChange={setDraft}
           />
           <Button className={cn("tenant-modal-submit", "mt-2")} type="submit" size="md" loading={busy} fullWidth>
             {t("save")}

@@ -22,7 +22,7 @@ export const {
   SERVICES_ENABLED,
   WAKE_CATCHUP_SECONDS,
   PORT,
-  SMTP_URL
+  BREVO_API_KEY
 } = process.env
 
 export const MACHINE_ID = process.env.MACHINE_ID || os.hostname()

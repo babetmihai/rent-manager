@@ -9,14 +9,14 @@ Each signed-in user only sees their own documents (`createdBy`).
 ```sh
 cp .env.example .env
 cp firebaseConfig.example.json firebaseConfig.json
-# fill firebaseConfig.json, FIREBASE_SERVICE_ACCOUNT, and SMTP_URL in .env
+# fill firebaseConfig.json, FIREBASE_SERVICE_ACCOUNT, and BREVO_API_KEY in .env
 npm install
 npm start
 ```
 
 UI at `http://localhost:5173`. Ticker health at `http://localhost:3002/health`.
 
-Firebase Auth needs Email/Password and Anonymous sign-in. `SMTP_URL` is the mailbox that sends tenant mail. The From address is the Pago account email.
+Firebase Auth needs Email/Password and Anonymous sign-in. `BREVO_API_KEY` sends the mail. The From address is the Pago account email, and that address has to be a verified Brevo sender.
 
 ## SDK
 

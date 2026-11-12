@@ -42,6 +42,12 @@ export const listenPago = () => {
   })
 }
 
+export const requestInvoiceMail = async (sendKeys) => {
+  const { id } = selectPago()
+  await service.update(id, { sendStatus: STEP_STATUS.PENDING, sendError: null, sendKeys })
+  void wakeTicker()
+}
+
 export const refreshInvoices = async () => {
   const { id } = selectPago()
   await service.update(id, { syncStatus: STEP_STATUS.PENDING, syncError: null })
